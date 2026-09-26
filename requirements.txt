@@ -1,0 +1,16 @@
+# python 3.12
+# magpylib 5 switched to SI units (m, T, A/m); these scripts use magpylib 4 units (mm, mT, kA/m)
+magpylib>=4.4,<5
+magpylib-material-response<0.3
+# numpy >= 2.4 errors on int() of 1-element arrays, which the optimization scripts rely on
+numpy>=2,<2.4
+scipy
+pandas
+matplotlib
+openpyxl
+loguru
+pymoo
+pygad
+addcopyfighandler
+PyQt6
+cadquery

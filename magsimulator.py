@@ -908,3 +908,61 @@ def plot_3D_field(B_mT,Bcomponent=0,xmin=-100,xmax=100,ymin=-100,ymax=100,zmin=-
     fig.suptitle('B field (mT). Mean: ' + str(round(meanmean,3)) + ', std: '  + str(round(stdstd,3)) + '\n Mean B field (MHz): ' + str(round(42.580000*meanmean/1000,3)) + ' std (Hz)' + str(round(42580000*stdstd/1000,3)))
     fig.show()
     
+
+#%% demagnetization check
+
+# iHc (kA/m) of the grade series in magnet_properties/CY-Mag-NdFeB.pdf, with the max working temperature (C). N50/N52 are only 875 kA/m.
+NDFEB_IHC_GRADES = [('N', 955, 80), ('M', 1114, 100), ('H', 1353, 120), ('SH', 1592, 150), ('UH', 1989, 180), ('EH', 2387, 200), ('AH', 2787, 220)]
+
+# builds a magpylib collection from a ledger, the same way simulate_ledger does (no demag meshing)
+def build_magnet_collection(ledger, mag_constant=[1270,0,0], extrinsicrot=True):
+    col_magnet = magpy.Collection(style_label='magnets')
+    for df_ledger, df_row in ledger.iterrows():
+        cube = magpy.magnet.Cuboid(magnetization=mag_constant, dimension=(df_row['Magnet_length'],df_row['Magnet_length'],df_row['Magnet_length']))
+        cube.position = (df_row['X-pos'], df_row['Y-pos'], df_row['Z-pos'])
+        if(extrinsicrot==True):
+            cube.orientation = R.from_euler('zyx', [df_row['Z-rot'],df_row['Y-rot'],df_row['X-rot']], degrees=True)
+        else:
+            cube.orientation = R.from_euler('ZYX', [df_row['Z-rot'],df_row['Y-rot'],df_row['X-rot']], degrees=True)
+        col_magnet.add(cube)
+    return col_magnet
+
+# computes the reverse (demagnetizing) H field each magnet sees: field from all other magnets plus its own self-demagnetization,
+# projected on the magnet's magnetization direction. positive = opposing the magnetization. units kA/m (magpylib 4: mm, mT -> H in kA/m).
+# H is sampled on a points_per_axis^3 grid spanning edge_fraction of the cube; the H of an ideal sharp-edged cube diverges (logarithmically)
+# at its edges, so the sampled max grows slowly as edge_fraction -> 1. the center value is the robust bulk number.
+def compute_demag_fields(ledger, mag_constant=[1270,0,0], extrinsicrot=True, points_per_axis=5, edge_fraction=0.9):
+    ledger = ledger.reset_index(drop=True)
+    col_magnet = build_magnet_collection(ledger, mag_constant, extrinsicrot)
+    mag_dir = np.array(mag_constant, dtype=float)/np.linalg.norm(mag_constant)
+
+    u = np.linspace(-0.5, 0.5, points_per_axis)*edge_fraction
+    local_grid = np.array(list(itertools.product(u, u, u)))
+    local_grid = np.vstack([np.zeros((1,3)), local_grid]) # first point is always the cube center
+
+    H_center = np.zeros(len(ledger))
+    H_max = np.zeros(len(ledger))
+    for idx, cube in enumerate(col_magnet.children):
+        pts = cube.orientation.apply(local_grid*cube.dimension) + cube.position
+        H = magpy.getH(col_magnet, pts)
+        H_reverse = -H @ cube.orientation.apply(mag_dir)
+        H_center[idx] = H_reverse[0]
+        H_max[idx] = np.max(H_reverse)
+
+    result = ledger.copy()
+    result['Hrev_center_kAm'] = H_center
+    result['Hrev_max_kAm'] = H_max
+    return result
+
+# minimum iHc (kA/m, at 20 C datasheet conditions) so that the worst reverse field stays below the knee of the intrinsic curve at max_temp_C.
+# knee_fraction: Hk/iHc squareness (~0.9 for sintered NdFeB). ihc_temp_coeff: %/C, -0.6 from the CY-Mag datasheet.
+def required_ihc(H_reverse_kAm, max_temp_C=40, safety_factor=1.2, knee_fraction=0.9, ihc_temp_coeff=-0.6):
+    ihc_at_temp = H_reverse_kAm*safety_factor/knee_fraction
+    derating = 1 + ihc_temp_coeff/100*max(max_temp_C-20, 0)
+    return ihc_at_temp/derating
+
+def suggest_grade(ihc_needed_kAm, max_temp_C=40):
+    for series, ihc, tmax in NDFEB_IHC_GRADES:
+        if ihc >= ihc_needed_kAm and tmax >= max_temp_C:
+            return series
+    return None
