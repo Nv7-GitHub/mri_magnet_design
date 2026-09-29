@@ -1,0 +1,141 @@
+# Design notes: compact Halbach magnet (100 mm bore, 40 x 40 mm imaging region)
+
+This fork adds tools to the MRI4ALL magnet scripts for a smaller magnet built from 1/4" N42 cubes in resin-printed rings,
+and records the design study that produced the recommended layout. All numbers are simulated with magpylib 4.
+
+## Recommended design
+
+`results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx` (ledger format; readable by `magcadexporter.py` and `check_demag.py`)
+
+| | |
+|---|---|
+| Magnets | 649 x 6.35 mm (1/4") N42 cubes, Br 1.32 T |
+| B0 | 45.0 mT (1.92 MHz proton) |
+| Magnet bore (holder inner diameter) | 100 mm, with a 3 mm wall to the nearest magnet corner |
+| Holder outer diameter | 184 mm (largest ring); rings print upright on a Formlabs Form 4 |
+| Length | 144 mm of magnets, 9 ring slices, mirror symmetric in z |
+| Layers | 3, all layers of a ring share the same z (one stack of whole rings) |
+| Target region | 40 mm diameter x 40 mm long cylinder |
+| Homogeneity, ideal magnets | **427 ppm** on the cylinder (302 ppm on a 40 mm sphere) |
+| Homogeneity, as built | 3,222 ppm typical, 4,413 ppm worst case (90th percentile), no shimming |
+| Demagnetization (N42, iHc 955 kA/m) | corner damage from ~66 C; 1.2x safety margin up to ~42 C |
+
+"As built" assumes random errors on every magnet: 1% Br spread, 0.05 mm placement and 1 degree magnetization
+angle (sigma), evaluated at 400 random builds with `magsimulator.tolerance_homogeneity`.
+
+Ring layout (each row is one printed ring, present at +z and -z):
+
+| Ring z (mm) | Inner layer | Middle layer | Outer layer |
+|---|---|---|---|
+| 0 | 23 @ r 57.5 | 22 @ 68.5 | 6 @ 84.6 |
+| +-18.9 | 28 @ 57.7 | 39 @ 68.7 | 23 @ 79.7 |
+| +-44.7 | 31 @ 58.2 | 39 @ 69.2 | 22 @ 80.2 |
+| +-59.4 | 32 @ 57.5 | 39 @ 68.5 | 15 @ 79.5 |
+| +-68.8 | 31 @ 57.5 | - | - |
+
+r is the radius of the magnet centers; each ring places its pockets at its own radii. Magnets follow the Halbach
+rule: a magnet at azimuth theta is rotated 2*theta about z, magnetization along its local x.
+
+Figures: `figures/best_fieldmap.png` (field slices), `figures/best_magnets3D_views.png` (top, two sides, 3D), and the
+same for the previous design (`final_*`). In the field slice plots from `extract_3Dfields`, the panel titled
+"xz plane" actually shows the yz plane and the one titled "yz plane" shows the xz plane (see Known issues).
+
+## Requirements that set the design
+
+- Imaging region 40 x 40 mm cylinder inside a 40 mm coil bore; 100 mm clear magnet bore leaves 30 mm per side for coils.
+- B0 >= 45 mT, at most 650 magnets, total length <= 150 mm.
+- Whole printed rings only (no split segments), which must fit the Form 4 (200 x 125 x 210 mm) standing upright.
+- Ring slices >= 9.35 mm apart (6.35 mm cube + 3 mm resin), >= 2 mm resin between layers.
+
+## What was learned
+
+**Paper vs as built.** Below about 2,000 ppm on paper, magnet errors dominate. For this magnet size they add roughly
+3,000-4,000 ppm regardless of design, mostly from the magnetization angle of each cube (a property of the magnets, not the
+printer) and placement. Going from 2,057 to 427 ppm on paper improved the as-built worst case only from 4,823 to 4,413 ppm.
+Reaching < 1,000 ppm as built requires measuring the magnets and assigning positions/rotations, or shimming.
+
+**Model check against MRI4ALL.** Their saved design (`optimization_after_neonate_...maxmag990.xlsx`) gives 3,843 ppm on
+paper over its 140 mm sphere and 738 ppm over a 100 mm sphere (their quoted ~740). With the same error model it
+predicts ~6,600 ppm as built over 140 mm, close to their reported ~6,000 ppm measurement. Scaled to a 100 mm bore it scores
+1,106 ppm on the 40 x 40 cylinder; the recommended design reaches 427 ppm with fewer magnets.
+
+**Geometry.** Homogeneity depends on region size relative to the magnet radius and on magnet length relative to radius.
+A 50 mm region in a 100 mm bore could not get below ~8,000 ppm as built; a magnet only 70-100 mm long around a 100 mm
+bore could not flatten a 40 mm region. Length of ~2.5x the magnet radius (~140-150 mm here) was needed.
+
+**Layer spacing.** Cubes only rotate about z, so the clearance between layers is set by the in-plane diagonal,
+sqrt(2)*a = 8.98 mm, not the 3D diagonal sqrt(3)*a = 11 mm used in the original scripts. With 2 mm of resin that gives
+11 mm between layer radii instead of 14 mm, which allows 3-4 layers within the Form 4 envelope.
+
+**Optimization.** The genetic algorithm (pymoo NSGA2, as in the MRI4ALL scripts) finds the layout type but results vary
+strongly between random seeds, and it needs a second objective (maximize B0) to keep population diversity: runs with the
+field pinned to a narrow band collapsed onto poor designs. The large gains came from local refinement of the best GA
+design: minimax optimization of ring z positions, rotations and small radial shifts (SLSQP), plus moving single magnets
+between rings (`refine_minimax.py`). In the one direct comparison (single runs, which also settled at different fields), optimizing
+the as-built metric gave a design at least as good on both metrics as optimizing the paper metric, which overfit the sparse
+check points; more seeds would be needed to call this general.
+
+**Magnets and materials.**
+- N42 1/4" cubes work; N52 gives the same ppm with ~12% more field but corner damage starts near 42 C (lower iHc).
+  N52SH/N48SH would fix that. Thin plates (10 x 5 x 2 mm magnetized through 2 mm) demagnetize themselves.
+- Forcing two repelling cubes together can exceed N42's coercivity at room temperature: use jigs during assembly.
+- Br drops ~0.12 %/C (~1,200 ppm per degree): temperature stability matters more than the static homogeneity.
+- Resin (Formlabs Tough 2000 or Precision Model) places magnets to ~0.05 mm; worth ~5-10% as built versus 0.1 mm.
+  Slip-fit cube pockets with corner reliefs and lids between rings hold magnets without glue.
+
+## Tools added
+
+- `magsimulator.py` (additions only, original functions unchanged):
+  `build_magnet_collection`, `compute_demag_fields`, `required_ihc`, `suggest_grade`, `define_sensor_points_on_cylinder`,
+  `shim_residual`, `tolerance_homogeneity` (as-built homogeneity from linearized per-magnet error sensitivities,
+  checked against a full Monte Carlo within ~10%).
+- `check_demag.py`: reverse H field on every magnet of a ledger and the minimum iHc / grade needed.
+  `python check_demag.py design.xlsx --Br 1320 --max-temp 40`
+- `optimize_robust_aligned.py`: the MRI4ALL optimization script generalized. Arguments:
+  `<region diameter> <generations> [max magnets] [min B0] [second objective: magnets|b0|none] [max length] [bore]
+  [cylinder length, 0 = sphere] [max layers] [objective: asbuilt|paper] [seed] [max B0]`;
+  environment: `POOL`, `POP`, `NSENS`, `TAG`, `ALIGN` (1 = shared ring positions), `LAYER_WALL` (mm, switches to
+  sqrt(2)*a spacing). Saves the Pareto front every 100 generations to `results/`.
+- `refine_design.py`: Powell refinement of ring z positions and rotations plus +-1 magnet moves.
+- `refine_minimax.py`: minimax (SLSQP) refinement with optional radial shifts, per-ring Jacobian, magnet budget,
+  and screened magnet moves between rings. Produced the recommended design:
+  `python refine_minimax.py results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx out.xlsx --radial --rounds 4`
+- `optimize_bore50mm_*.py`: earlier iterations for a 50 mm magnet bore, kept for reference.
+
+## Reproducing the recommended design
+
+```bash
+source .venv/bin/activate
+# 1. GA: 40x40 cylinder, 100 mm bore, >=45 mT, <=650 magnets, <=150 mm, 3 layers, as-built objective
+POOL=11 python optimize_robust_aligned.py 40 2000 650 45 b0 150 100 40 3
+# 2. Powell refinement of the best Pareto design
+python refine_design.py results/FINAL_bore100_cyl40x40_649mag_3layer.xlsx results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx --sensors 300
+# 3. minimax refinement with radial shifts and magnet moves
+python refine_minimax.py results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx results/BEST.xlsx --radial --rounds 4
+```
+
+The GA step is stochastic; a different seed gives a different starting design.
+
+## Results directory
+
+- `BEST_*.xlsx`: recommended design. `FINAL_*.xlsx`: GA result before refinement (2,057 ppm).
+  `REFINED_*`, `MM2_*`, `PAPEROPT_*`: intermediate and comparison designs.
+- `*_summary.csv` / `*_pareto<N>.xlsx`: Pareto fronts saved by the optimizer (sim_ppm = paper, asbuilt_p90_ppm = as built).
+- `*.log`: optimizer and refinement logs. Subfolders hold snapshots saved before runs were restarted.
+
+## Known issues in the original code
+
+- `extract_3Dfields` / `plot_3D_field`: the field grid is stored as B[y, x, z], so the panel titled "xz plane" shows the
+  yz plane, "yz plane" shows the xz plane, and vertical axes are flipped. Values are correct.
+- Needs magpylib 4 (mm, mT). magpylib 5 uses SI units and silently gives wrong fields. NumPy >= 2.4 breaks the scripts'
+  `int()` of 1-element arrays; `requirements.txt` pins both.
+- `generate_ring_of_magnets` calls `sys.exit` if a ring is too crowded, which kills a whole optimization run; keep the
+  per-ring magnet bounds within `get_max_magnets_per_radius`.
+- `addcopyfighandler` forces a Qt backend (PyQt6 is in requirements), and the scripts end in `plt.show()`, which blocks.
+
+## Next steps
+
+1. Measure every magnet (Br and magnetization angle) and add a mode to `refine_minimax.py` that assigns measured magnets to
+   positions and rotations. This is the main route below ~3,000 ppm as built.
+2. Print a test ring and a pocket-clearance coupon; confirm the 184 mm ring fits upright in PreForm with supports.
+3. Plan passive or electrical shimming for the remaining error.

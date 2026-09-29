@@ -1,0 +1,16 @@
+start: 649 magnets, 2003 ppm, B0 45.01 mT
+round 1 continuous polish: cost 1903  (118 s)
+   ring (0, 2): 30 -> 31 magnets, cost 1706
+   ring (1, 0): 21 -> 20 magnets, cost 1621
+   ring (1, 2): 31 -> 32 magnets, cost 1601
+   ring (1, 3): 28 -> 29 magnets, cost 1523
+   ring (2, 0): 7 -> 6 magnets, cost 1521
+   ring (2, 3): 34 -> 33 magnets, cost 1519
+round 2 continuous polish: cost 1519  (1118 s)
+   ring (0, 0): 25 -> 24 magnets, cost 1485
+   ring (1, 0): 20 -> 21 magnets, cost 1476
+round 3 continuous polish: cost 1476  (2069 s)
+   ring (0, 0): 24 -> 23 magnets, cost 1454
+   ring (1, 0): 21 -> 22 magnets, cost 1436
+   ring (2, 2): 23 -> 22 magnets, cost 1435
+done: 649 magnets, 1435 ppm, B0 45.02 mT, length 128.6 mm, min slice gap 9.35 mm  (3002 s) -> results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx

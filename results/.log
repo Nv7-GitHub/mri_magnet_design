@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/Users/nv/Documents/MRI/magnet_design/refine_minimax.py", line 254, in <module>
+    main()
+  File "/Users/nv/Documents/MRI/magnet_design/refine_minimax.py", line 188, in main
+    L = pd.read_excel(args.ledger)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nv/Documents/MRI/magnet_design/.venv/lib/python3.12/site-packages/pandas/io/excel/_base.py", line 481, in read_excel
+    io = ExcelFile(
+         ^^^^^^^^^^
+  File "/Users/nv/Documents/MRI/magnet_design/.venv/lib/python3.12/site-packages/pandas/io/excel/_base.py", line 1604, in __init__
+    ext = inspect_excel_format(
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nv/Documents/MRI/magnet_design/.venv/lib/python3.12/site-packages/pandas/io/excel/_base.py", line 1452, in inspect_excel_format
+    with get_handle(
+         ^^^^^^^^^^^
+  File "/Users/nv/Documents/MRI/magnet_design/.venv/lib/python3.12/site-packages/pandas/io/common.py", line 939, in get_handle
+    handle = open(handle, ioargs.mode)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx MM2_from_refined'

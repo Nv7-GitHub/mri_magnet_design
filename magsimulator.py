@@ -387,6 +387,30 @@ def define_sensor_points_on_sphere(num_pts,r,base_coord):
     sensor = magpy.Sensor(position=arr,style_size=2)
     return sensor
 
+# sensor points on the surface of a cylinder along z (radius r, length h): rings on the side wall plus sunflower-spread points on both end caps.
+# the field extremes of a source-free region lie on its boundary, so the surface is enough to evaluate homogeneity of the whole cylinder
+def define_sensor_points_on_cylinder(num_pts,r,h,base_coord):
+    side_area = 2*np.pi*r*h
+    cap_area = np.pi*r**2
+    n_side = int(num_pts*side_area/(side_area+2*cap_area))
+    n_cap = (num_pts-n_side)//2
+
+    n_rings = max(2, int(round(np.sqrt(n_side*h/(2*np.pi*r)))))
+    n_per_ring = max(4, n_side//n_rings)
+    theta = np.linspace(0, 2*np.pi, n_per_ring, endpoint=False)
+    zs = np.linspace(-h/2, h/2, n_rings)
+    side = np.array([(r*np.cos(t+0.5*k*np.pi/n_per_ring), r*np.sin(t+0.5*k*np.pi/n_per_ring), z) for k, z in enumerate(zs) for t in theta])
+
+    idx = np.arange(n_cap) + 0.5
+    rr = r*np.sqrt(idx/n_cap)
+    tt = np.pi*(1 + 5**0.5)*idx
+    cap = np.stack((rr*np.cos(tt), rr*np.sin(tt), np.zeros(n_cap)), axis=1)
+    arr = np.vstack([side, cap + [0,0,h/2], cap - [0,0,h/2], np.array([0,0,0])])
+    arr = arr + np.array(base_coord)
+
+    sensor = magpy.Sensor(position=arr,style_size=2)
+    return sensor
+
 def define_sensor_points_on_filled_sphere(num_pts,r,num_r_points,base_coord):
     r_points = np.linspace(0.1,r,num_r_points)
 
@@ -966,3 +990,50 @@ def suggest_grade(ihc_needed_kAm, max_temp_C=40):
         if ihc >= ihc_needed_kAm and tmax >= max_temp_C:
             return series
     return None
+
+
+#%% tolerance (as-built) homogeneity
+
+# fits the field on the sensor points with the given shim order and returns the residual.
+# order 0: nothing removed but the mean, 1: linear gradients (free shim with gradient offsets), 2: + second-order harmonics
+def shim_residual(B, pos, order=1):
+    x, y, z = pos[:,0], pos[:,1], pos[:,2]
+    terms = [np.ones_like(x)]
+    if order >= 1:
+        terms += [x, y, z]
+    if order >= 2:
+        terms += [x*x-y*y, 2*z*z-x*x-y*y, x*y, x*z, y*z]
+    A = np.stack(terms, axis=1)
+    coef = np.linalg.lstsq(A, B, rcond=None)[0]
+    return B - A @ coef
+
+# homogeneity of an as-built magnet with random errors on every magnet: Br (fraction), position (mm) and angle of the magnetization (deg).
+# the field change is linear in small errors, so each magnet's sensitivities are computed once (6 field evaluations) and n_samples
+# random builds are drawn from them. returns (nominal ppm, B0 in mT, percentile ppm of the as-built magnet after shimming with shim_order)
+def tolerance_homogeneity(ledger, sensor_pos, mag_constant=[1320,0,0], sigma_Br=0.01, sigma_pos=0.1, sigma_ang_deg=1.0,
+                          n_samples=100, percentile=90, shim_order=1, extrinsicrot=True, seed=0):
+    col = build_magnet_collection(ledger, mag_constant, extrinsicrot)
+    cubes = col.children
+    Br = np.linalg.norm(mag_constant)
+    comp = int(np.argmax(np.abs(mag_constant)))
+
+    B = magpy.getB(cubes, sensor_pos, sumup=False)[..., comp]                    # (n_mag, n_sens) nominal per-magnet field
+    for c in cubes: c.magnetization = (0, Br, 0)
+    B_rot1 = magpy.getB(cubes, sensor_pos, sumup=False)[..., comp]               # magnetization tipped towards local y
+    for c in cubes: c.magnetization = (0, 0, Br)
+    B_rot2 = magpy.getB(cubes, sensor_pos, sumup=False)[..., comp]               # magnetization tipped towards local z
+    for c in cubes: c.magnetization = tuple(mag_constant)
+    h = 0.01
+    grad = [(magpy.getB(cubes, sensor_pos - h*e, sumup=False)[..., comp] - B)/h for e in np.eye(3)]  # moving a magnet by +d = moving sensors by -d
+
+    # sensitivity matrix: rows are error sources scaled by their sigma, columns are sensors
+    G = np.concatenate([B*sigma_Br, B_rot1*np.deg2rad(sigma_ang_deg), B_rot2*np.deg2rad(sigma_ang_deg)] + [g*sigma_pos for g in grad], axis=0)
+    B_nom = B.sum(axis=0)
+    rng = np.random.default_rng(seed)
+    samples = B_nom[None, :] + rng.standard_normal((n_samples, G.shape[0])) @ G   # (n_samples, n_sens)
+
+    meanB0 = np.mean(B_nom)
+    eta_nom = 1e6*np.abs((B_nom.max()-B_nom.min())/meanB0)
+    res = shim_residual(samples.T, sensor_pos, shim_order).T
+    eta_built = 1e6*np.abs((res.max(axis=1)-res.min(axis=1))/meanB0)
+    return eta_nom, meanB0, np.percentile(eta_built, percentile)

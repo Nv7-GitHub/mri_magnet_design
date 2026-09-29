@@ -1,0 +1,416 @@
+/Users/nv/Documents/MRI/magnet_design/optimize_robust_aligned.py:54: DeprecationWarning: Importing 'StarmapParallelization' from 'pymoo.core.problem' is deprecated. Please use 'from pymoo.parallelization import StarmapParallelization' instead. This backward compatibility import will be removed in a future version.
+  from pymoo.core.problem import StarmapParallelization
+==========================================================================================
+n_gen  |  n_eval  | n_nds  |     cv_min    |     cv_avg    |      eps      |   indicator  
+==========================================================================================
+     1 |       40 |      1 |  3.397303E+01 |  1.579816E+02 |             - |             -
+     2 |       80 |      1 |  2.504198E+01 |  5.841525E+01 |             - |             -
+     3 |      120 |      1 |  2.504198E+01 |  3.968584E+01 |             - |             -
+     4 |      160 |      1 |  2.504198E+01 |  3.475296E+01 |             - |             -
+     5 |      200 |      1 |  2.289657E+01 |  3.227860E+01 |             - |             -
+     6 |      240 |      1 |  2.289657E+01 |  3.031238E+01 |             - |             -
+     7 |      280 |      1 |  2.289657E+01 |  2.802793E+01 |             - |             -
+     8 |      320 |      1 |  2.110564E+01 |  2.580186E+01 |             - |             -
+     9 |      360 |      1 |  1.888472E+01 |  2.386235E+01 |             - |             -
+    10 |      400 |      1 |  1.795219E+01 |  2.266734E+01 |             - |             -
+    11 |      440 |      1 |  1.326280E+01 |  2.079848E+01 |             - |             -
+    12 |      480 |      1 |  1.172356E+01 |  1.888785E+01 |             - |             -
+    13 |      520 |      1 |  8.1824827524 |  1.731130E+01 |             - |             -
+    14 |      560 |      1 |  8.1824827524 |  1.548757E+01 |             - |             -
+    15 |      600 |      1 |  6.3495284422 |  1.349927E+01 |             - |             -
+    16 |      640 |      1 |  6.3495284422 |  1.191885E+01 |             - |             -
+    17 |      680 |      1 |  6.3495284422 |  1.053690E+01 |             - |             -
+    18 |      720 |      1 |  6.3495284422 |  9.2621867025 |             - |             -
+    19 |      760 |      1 |  5.8948593498 |  7.9334382440 |             - |             -
+    20 |      800 |      1 |  5.8370971814 |  7.0925197792 |             - |             -
+    21 |      840 |      1 |  4.2902180212 |  6.4989505463 |             - |             -
+    22 |      880 |      1 |  4.2902180212 |  6.0190451055 |             - |             -
+    23 |      920 |      1 |  4.0177339801 |  5.5850455725 |             - |             -
+    24 |      960 |      1 |  3.7867359003 |  5.0024323868 |             - |             -
+    25 |     1000 |      1 |  3.3552147707 |  4.4711434818 |             - |             -
+    26 |     1040 |      1 |  3.1544176265 |  4.1324768925 |             - |             -
+    27 |     1080 |      1 |  2.9615728151 |  3.8506022260 |             - |             -
+    28 |     1120 |      1 |  2.4068633942 |  3.5040733132 |             - |             -
+    29 |     1160 |      1 |  2.4068633942 |  3.2252717867 |             - |             -
+    30 |     1200 |      1 |  2.4068633942 |  3.0405380478 |             - |             -
+    31 |     1240 |      1 |  2.2654409449 |  2.8371527896 |             - |             -
+    32 |     1280 |      1 |  1.6768559161 |  2.6556818303 |             - |             -
+    33 |     1320 |      1 |  1.5421772960 |  2.4707713772 |             - |             -
+    34 |     1360 |      1 |  1.5421772960 |  2.2652599243 |             - |             -
+    35 |     1400 |      1 |  1.2903871141 |  2.0393595674 |             - |             -
+    36 |     1440 |      1 |  0.8730273294 |  1.8513686302 |             - |             -
+    37 |     1480 |      1 |  0.8730273294 |  1.6444641321 |             - |             -
+    38 |     1520 |      1 |  0.7244396671 |  1.3782739602 |             - |             -
+    39 |     1560 |      1 |  0.4906350369 |  1.1275927021 |             - |             -
+    40 |     1600 |      1 |  0.1897461462 |  0.8542985356 |             - |             -
+    41 |     1640 |      1 |  0.1216051617 |  0.6979810036 |             - |             -
+    42 |     1680 |      3 |  0.000000E+00 |  0.5149757232 |             - |             -
+    43 |     1720 |      5 |  0.000000E+00 |  0.3163311150 |  0.7268254160 |         ideal
+    44 |     1760 |      4 |  0.000000E+00 |  0.1484395038 |  0.1117826416 |             f
+    45 |     1800 |      5 |  0.000000E+00 |  0.0324961979 |  0.9472490044 |         ideal
+    46 |     1840 |     10 |  0.000000E+00 |  0.000000E+00 |  0.6107985327 |         ideal
+    47 |     1880 |     14 |  0.000000E+00 |  0.000000E+00 |  0.5474324575 |         ideal
+    48 |     1920 |     18 |  0.000000E+00 |  0.000000E+00 |  0.0245902699 |             f
+    49 |     1960 |      7 |  0.000000E+00 |  0.000000E+00 |  0.2692242866 |         ideal
+    50 |     2000 |     10 |  0.000000E+00 |  0.000000E+00 |  0.0202324829 |             f
+    51 |     2040 |     16 |  0.000000E+00 |  0.000000E+00 |  0.0139437073 |             f
+    52 |     2080 |     25 |  0.000000E+00 |  0.000000E+00 |  0.0349252795 |         ideal
+    53 |     2120 |     16 |  0.000000E+00 |  0.000000E+00 |  0.1057088647 |         ideal
+    54 |     2160 |     18 |  0.000000E+00 |  0.000000E+00 |  0.0049024428 |         ideal
+    55 |     2200 |      9 |  0.000000E+00 |  0.000000E+00 |  0.0358902763 |         ideal
+    56 |     2240 |     14 |  0.000000E+00 |  0.000000E+00 |  0.0049250394 |         ideal
+    57 |     2280 |     16 |  0.000000E+00 |  0.000000E+00 |  0.2167098037 |         ideal
+    58 |     2320 |     22 |  0.000000E+00 |  0.000000E+00 |  0.0223196078 |         ideal
+    59 |     2360 |     25 |  0.000000E+00 |  0.000000E+00 |  0.0020852348 |             f
+    60 |     2400 |     28 |  0.000000E+00 |  0.000000E+00 |  0.0412824533 |         ideal
+    61 |     2440 |     18 |  0.000000E+00 |  0.000000E+00 |  0.0160785669 |             f
+    62 |     2480 |     25 |  0.000000E+00 |  0.000000E+00 |  0.0744201470 |         ideal
+    63 |     2520 |     30 |  0.000000E+00 |  0.000000E+00 |  0.0015074102 |             f
+    64 |     2560 |     37 |  0.000000E+00 |  0.000000E+00 |  0.0089957656 |             f
+    65 |     2600 |     15 |  0.000000E+00 |  0.000000E+00 |  0.0264314397 |             f
+    66 |     2640 |     18 |  0.000000E+00 |  0.000000E+00 |  0.1274986718 |         ideal
+    67 |     2680 |     18 |  0.000000E+00 |  0.000000E+00 |  0.0048816565 |             f
+    68 |     2720 |     21 |  0.000000E+00 |  0.000000E+00 |  0.0187231650 |             f
+    69 |     2760 |     24 |  0.000000E+00 |  0.000000E+00 |  0.0477316489 |         ideal
+    70 |     2800 |     30 |  0.000000E+00 |  0.000000E+00 |  0.0262376399 |         ideal
+    71 |     2840 |     36 |  0.000000E+00 |  0.000000E+00 |  0.0028052781 |             f
+    72 |     2880 |     34 |  0.000000E+00 |  0.000000E+00 |  0.0309634263 |         ideal
+    73 |     2920 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0126740986 |         ideal
+    74 |     2960 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0231257193 |         ideal
+    75 |     3000 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0050262948 |             f
+    76 |     3040 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0031043857 |             f
+    77 |     3080 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0032204011 |             f
+    78 |     3120 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0033380174 |         nadir
+    79 |     3160 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0054117371 |             f
+    80 |     3200 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0074129041 |             f
+    81 |     3240 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0024599483 |             f
+    82 |     3280 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0762127612 |         ideal
+    83 |     3320 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0021659525 |             f
+    84 |     3360 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0035671707 |             f
+    85 |     3400 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0040950803 |             f
+    86 |     3440 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0062818292 |         ideal
+    87 |     3480 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0052879911 |         nadir
+    88 |     3520 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0010690107 |             f
+    89 |     3560 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0472702392 |         ideal
+    90 |     3600 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0039919208 |             f
+    91 |     3640 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0438472707 |         ideal
+    92 |     3680 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0054075353 |             f
+    93 |     3720 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0033201908 |             f
+    94 |     3760 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0032049922 |             f
+    95 |     3800 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0366890720 |         ideal
+    96 |     3840 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0058553386 |             f
+    97 |     3880 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0022013116 |             f
+    98 |     3920 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0041114760 |             f
+    99 |     3960 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0030412787 |             f
+   100 |     4000 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0054670017 |             f
+mean B0=50.8235 homogen=121676.2467
+mean B0=54.2598 homogen=171405.3901
+mean B0=54.2174 homogen=170124.3339
+mean B0=53.9783 homogen=166743.2489
+mean B0=51.8383 homogen=134702.0413
+mean B0=53.6453 homogen=160337.3905
+mean B0=52.4978 homogen=144038.688
+mean B0=53.7623 homogen=164142.3563
+mean B0=52.6941 homogen=148806.1269
+mean B0=52.6511 homogen=146915.0796
+mean B0=52.8919 homogen=150242.6582
+mean B0=53.4396 homogen=157605.071
+mean B0=51.3299 homogen=126731.3124
+mean B0=53.5696 homogen=159611.9503
+mean B0=53.8261 homogen=165063.7106
+mean B0=51.6445 homogen=131625.0431
+mean B0=51.0244 homogen=123412.5965
+mean B0=52.0289 homogen=136701.3099
+mean B0=52.1675 homogen=139806.851
+mean B0=53.3593 homogen=156828.3114
+mean B0=50.9131 homogen=122783.4411
+mean B0=51.1977 homogen=125551.5718
+mean B0=53.2614 homogen=155588.273
+mean B0=52.0208 homogen=136576.8779
+mean B0=53.1876 homogen=154701.4347
+mean B0=51.7241 homogen=133926.8176
+mean B0=53.0673 homogen=153270.3089
+mean B0=52.3011 homogen=141441.9927
+mean B0=53.9619 homogen=166544.9617
+mean B0=52.1803 homogen=139927.849
+mean B0=52.9386 homogen=151917.5503
+mean B0=51.123 homogen=124379.7245
+mean B0=53.1016 homogen=153594.0059
+mean B0=51.4082 homogen=128250.8228
+mean B0=51.5109 homogen=129363.6341
+mean B0=51.4398 homogen=128402.7344
+mean B0=51.5663 homogen=130929.409
+mean B0=50.8352 homogen=121720.8326
+mean B0=52.3531 homogen=142327.1594
+mean B0=52.4255 homogen=143171.6004
+   101 |     4040 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0044023143 |             f
+   102 |     4080 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0039271868 |             f
+   103 |     4120 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0024964495 |             f
+   104 |     4160 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0239010575 |         ideal
+   105 |     4200 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0015607247 |             f
+   106 |     4240 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0117131164 |         ideal
+   107 |     4280 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0087279241 |         ideal
+   108 |     4320 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0013968039 |             f
+   109 |     4360 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0186273852 |         ideal
+   110 |     4400 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0943058164 |         ideal
+   111 |     4440 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0006348335 |             f
+   112 |     4480 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0028161021 |             f
+   113 |     4520 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0144258951 |         ideal
+   114 |     4560 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0037829543 |             f
+   115 |     4600 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0014785975 |             f
+   116 |     4640 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0041372844 |             f
+   117 |     4680 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0036173519 |             f
+   118 |     4720 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0319534447 |         ideal
+   119 |     4760 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0037129031 |             f
+   120 |     4800 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0015756364 |             f
+   121 |     4840 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0042625984 |             f
+   122 |     4880 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0022251759 |             f
+   123 |     4920 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0076681581 |         ideal
+   124 |     4960 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0024468330 |             f
+   125 |     5000 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0048059529 |             f
+   126 |     5040 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0044294869 |             f
+   127 |     5080 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0044180239 |             f
+   128 |     5120 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0037674613 |             f
+   129 |     5160 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0040063929 |             f
+   130 |     5200 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0055967173 |             f
+   131 |     5240 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0029701725 |             f
+   132 |     5280 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0108870866 |         ideal
+   133 |     5320 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0259168980 |         nadir
+   134 |     5360 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0042093699 |             f
+   135 |     5400 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0486908009 |         ideal
+   136 |     5440 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0041502194 |             f
+   137 |     5480 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0048983386 |             f
+   138 |     5520 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0016459226 |             f
+   139 |     5560 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0057948922 |             f
+   140 |     5600 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0032713105 |             f
+   141 |     5640 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0031353611 |             f
+   142 |     5680 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0047285677 |             f
+   143 |     5720 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0039664600 |             f
+   144 |     5760 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0014008622 |             f
+   145 |     5800 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0121727261 |         ideal
+   146 |     5840 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0033005927 |             f
+   147 |     5880 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0079446703 |         ideal
+   148 |     5920 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0023735244 |             f
+   149 |     5960 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0055230969 |             f
+   150 |     6000 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0036775994 |             f
+   151 |     6040 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0459004932 |         ideal
+   152 |     6080 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0068053224 |         ideal
+   153 |     6120 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0040117159 |             f
+   154 |     6160 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0096437158 |         ideal
+   155 |     6200 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0036159998 |             f
+   156 |     6240 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0049285849 |             f
+   157 |     6280 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0221105658 |         ideal
+   158 |     6320 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0150557132 |         ideal
+   159 |     6360 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0009936883 |             f
+   160 |     6400 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0842432241 |         ideal
+   161 |     6440 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0084671156 |         ideal
+   162 |     6480 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0357458485 |         ideal
+   163 |     6520 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0053377275 |             f
+   164 |     6560 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0010691492 |             f
+   165 |     6600 |     40 |  0.000000E+00 |  0.000000E+00 |  0.0051284815 |             f
+Process SpawnPoolWorker-6:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+Process SpawnPoolWorker-5:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+Process SpawnPoolWorker-1:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+Process SpawnPoolWorker-4:
+Process SpawnPoolWorker-2:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+Process SpawnPoolWorker-3:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/queues.py", line 399, in put
+    self._writer.send_bytes(obj)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 200, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 427, in _send_bytes
+    self._send(header + buf)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/connection.py", line 384, in _send
+    n = write(self._handle, buf)
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

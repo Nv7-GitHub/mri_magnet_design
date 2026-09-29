@@ -27,3 +27,8 @@ python check_demag.py my_design.xlsx --max-temp 40 --safety 1.2 --plot
 - `--out results.xlsx`: per-magnet reverse fields.
 
 The required iHc only covers the finished array. Handling during assembly can be worse: two ½" cubes forced together face-to-face in repulsion see up to ~930 kA/m near their edges.
+
+## Compact magnet design study (this fork)
+
+See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools
+added for it (`optimize_robust_aligned.py`, `refine_minimax.py`, as-built tolerance analysis), and what was learned.
