@@ -28,8 +28,17 @@ python check_demag.py my_design.xlsx --max-temp 40 --safety 1.2 --plot
 
 The required iHc only covers the finished array. Handling during assembly can be worse: two ½" cubes forced together face-to-face in repulsion see up to ~930 kA/m near their edges.
 
+## Magnet holder CAD
+
+See [CAD.md](CAD.md) for generating the printable ring holders (SLA rings + FDM spacers) from a design, the SLA and FDM
+tolerance coupons to print first, and assembly:
+
+```bash
+python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out cad/best --magnets
+```
+
 ## Compact magnet design study (this fork)
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools
 added for it (`optimize_robust_aligned.py`, `refine_minimax.py`, as-built tolerance analysis), the ring-holder CAD generator (`make_ring_cad.py`,
-`make_test_coupon.py`, `check_bolt_loads.py`), and what was learned.
+`make_test_coupon.py`, `make_fdm_coupon.py`, `check_bolt_loads.py`), and what was learned.

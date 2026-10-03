@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 import magsimulator as ms
-from make_ring_cad import load_ledger, outer_hole_angles, place_inner_holes, pocket_outline, triangle_outline
+from make_ring_cad import load_ledger, outer_hole_angles, place_inner_holes, pocket_outline, notch_outline
 
 STRESS_AREA = {2.0: 2.07, 2.5: 3.39, 3.0: 5.03, 4.0: 8.78}     # ISO metric coarse, mm^2
 
@@ -74,7 +74,7 @@ def main():
 
     # bolt positions exactly as make_ring_cad.py places them
     pockets = [pocket_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx + 2*args.relief, wy + 2*args.relief) for _, r in L.iterrows()]
-    tris = [triangle_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx, 2.5, 0.4) for _, r in L.iterrows()]
+    tris = [notch_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx, 2.0, 1.0) for _, r in L.iterrows()]
     d_out, d_in = args.outer_bolt + args.outer_tol, args.inner_bolt + args.inner_tol
     r_out = max(np.hypot(*P.T).max() for P in pockets + tris) + args.min_wall + d_out/2
     bolts = [(r_out*np.cos(np.deg2rad(t)), r_out*np.sin(np.deg2rad(t)), args.outer_bolt)

@@ -104,28 +104,49 @@ check points; more seeds would be needed to call this general.
 
 ## Holder CAD
 
-`make_ring_cad.py` turns a ledger into printable ring slabs (STEP/STL), one per ring z, plus a top-view loading guide
-(PNG) per slab. Each slab's top face is level with the top of its pockets, so the slab above closes them and stacking sets
-the ring spacing; slab 0 has a 3 mm floor, the top slab is closed by the end cap (not generated). Pockets are the cube plus
-a clearance per local axis (`--tol x y z`), with corner reliefs, an air hole through the floor and an engraved triangle
-on the N (magnetization) side. 8 M3 holes outside the magnets (one shifted 10 degrees so the stack only goes together one
-way) and 6 M2 holes between the bore and the inner magnets, placed where they clear the pockets of every slab; M3 does
-not fit inside (only ~2.3 mm of resin between the 100 mm bore and the inner pockets). Bolt clearances are separate
-(`--outer-tol`, `--inner-tol`). A V notch on the outside marks +x (B0).
+Step-by-step instructions (coupons, generating, printing, assembly) are in [CAD.md](CAD.md); this section records the
+design choices.
+
+
+`make_ring_cad.py` turns a ledger into printable parts (STEP/STL) plus a top-view loading guide (PNG) per ring:
+
+- **SLA rings**, one per ring z: magnet pockets open at the top face over a 2 mm floor (8.65 mm thick). Pockets are the
+  cube plus a clearance per local axis (`--tol x y z`), with corner reliefs, an air hole through the floor and a small V
+  notch in the wall at the N (magnetization) face. Where two rings are closer than 3 mm + ring thickness (slabs 0/1 and
+  7/8, 9.35 mm apart) the upper ring reaches down and sits directly on the lower one. Slab 0 has a 3 mm floor; the top
+  slab is closed by the end cap (not generated).
+- **FDM spacers** in the other gaps: a 1.6 mm lid plate that caps the pockets of the ring below, 2 mm inner and outer
+  walls, 16 radial ribs and a boss around every bolt hole, open on top so they print lid-down without supports. For the
+  recommended design: three heights (6.06, 10.21, 17.22 mm), each printed twice (the +z and -z spacers are identical).
+  `--solid` instead makes every SLA slab fill the gap below it (no spacers).
+- **Bolts**: 8 M3 outside the magnets (one shifted 10 degrees so the stack only goes together one way) and 6 M2 between
+  the bore and the inner magnets, placed where they clear the pockets of every slab; M3 does not fit inside (only
+  ~2.3 mm of resin between the 100 mm bore and the inner pockets). SLA and FDM hole clearances are set separately
+  (`--outer-tol`/`--inner-tol`, `--fdm-outer-tol`/`--fdm-inner-tol`). A V notch on the outside of every part marks +x (B0).
+- `assembly.step` imports as an assembly with one named component per slab and spacer (`assembly_with_magnets.step`
+  adds the cubes, with `--magnets`).
 
 ```bash
-python make_test_coupon.py --out cad/coupon        # print first: pocket clearances x rotations, thin walls, bolt holes
+python make_test_coupon.py --out cad/coupon        # SLA: pocket clearances x rotations, thin walls, bolt holes
+python make_fdm_coupon.py --out cad/fdm_coupon     # FDM: spacer heights, bolt holes
 python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out cad/best --tol 0.15 0.15 0.3 \
-    --outer-tol 0.4 --inner-tol 0.4 --magnets
+    --outer-tol 0.4 --inner-tol 0.4 --fdm-outer-tol 0.5 --fdm-inner-tol 0.5 --spacer-comp 0 --magnets
+python check_bolt_loads.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx
 ```
 
-For the recommended design: OD 193.6 mm, stack 147.2 mm without end caps, slabs 9.35-25.9 mm thick. The thinnest
-resin between neighbouring pockets is 1.02 mm (0.15 mm clearance, 0.4 mm corner reliefs); these are pinch points where
-two pocket corners nearly meet, under 1.5 mm for only 0.1-0.3 mm along a face. The coupon's 0.6/0.8/1.0 mm pairs test
-them. The +z and -z slabs are not identical (the slab boundaries are not mirror symmetric), so all 9 are printed
-from their own files. Print every slab with the same resin, wash and cure, and turn every other slab 90 degrees about
-its own axis on the build plate so print ovality alternates through the stack (the slabs themselves always assemble in
-the keyed orientation).
+For the recommended design: OD 193.6 mm, stack 147.2 mm without end caps, 1.5 L of SLA resin (2.9 L with `--solid`)
+and 0.38 L of FDM spacers. The thinnest resin between neighbouring pockets is 1.02 mm (0.15 mm clearance, 0.4 mm corner
+reliefs); these are pinch points where two pocket corners nearly meet, under 1.5 mm for only 0.1-0.3 mm along a face. The
+SLA coupon's 0.6/0.8/1.0 mm pairs test them. The +z and -z SLA rings are not identical (the slab boundaries are not mirror
+symmetric), so all 9 are printed from their own files. Print every ring with the same resin, wash and cure, and turn
+every other ring 90 degrees about its own axis on the build plate so print ovality alternates through the stack (the
+parts themselves always assemble in the keyed orientation).
+
+**Spacer heights set the ring spacing**, which matters at the 0.05-0.1 mm level (ring z errors of 0.05-0.1 mm sigma
+cost ~1,200-1,300 ppm in the warp study above). FDM loads are small (under 10 N per bolt), but typical FDM height accuracy
+is ~0.1 mm: print the FDM coupon with the spacers' exact settings, measure the height samples and pass the mean error as
+`--spacer-comp` (printed 0.1 mm tall -> `--spacer-comp -0.1`), then check every printed spacer with calipers. PETG or
+PLA; the parts see room temperature and light clamping only.
 
 ### Forces, bolts and resin
 
@@ -135,8 +156,8 @@ load each joint between slabs puts on the bolts (positions as placed by `make_ri
 - Per magnet: median 1.25 N, max 2.9 N.
 - Separating force across a joint: 20-73 N (largest at the joints between slabs 1/2 and 7/8), 39.5 N on each end cap;
   shear up to 9.8 N between the two outermost slabs; torques about z under 0.06 N m.
-- Shared by 8 M3 + 6 M2 bolts: at most 8.7 N per M3 and 3.2 N per M2. Brass (CW614N/C360, taking a conservative 150 MPa
-  yield) holds ~750 N (M3) and ~310 N (M2), a margin of ~90x. Brass is non-magnetic; avoid 18-8 stainless, whose
+- Shared by 8 M3 + 6 M2 bolts: at most 7.8 N per M3 and 3.1 N per M2 (with the current inner hole placement). Brass
+  (CW614N/C360, taking a conservative 150 MPa yield) holds ~750 N (M3) and ~310 N (M2), a margin of ~100x. Brass is non-magnetic; avoid 18-8 stainless, whose
   cold-worked threads can be slightly magnetic. The stack is ~150 mm plus caps, so M3 brass threaded rod with nuts is
   the practical form. A light preload (snug, ~0.1-0.2 N m on M3 with washers) is far more than the 5-9 N per bolt
   needed to keep joints closed and avoids crushing or creeping the resin; friction from it also carries the shear.

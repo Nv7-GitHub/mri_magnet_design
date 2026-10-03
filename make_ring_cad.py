@@ -1,14 +1,16 @@
 """
 Generate printable ring holders (a stack of slabs with a bore) from a magnet ledger.
 
-Each distinct magnet z in the ledger becomes one slab. A slab is an annulus whose top face is level with the top of its
-magnet pockets, so the next slab up is the lid that holds the magnets in; slab i spans from the top of slab i-1 to the top
-of its own pockets. Slab 0 has a solid floor (--base) under its pockets. The top slab's pockets are open: the end cap
-(not generated here) closes them. Stacking the slabs therefore sets every ring's z with no separate spacers.
+Each distinct magnet z in the ledger becomes one SLA ring: its magnet pockets open at the top face over a thin floor
+(--floor), the top face level with the top of the pockets. Between rings, an FDM spacer (lid plate + walls + ribs +
+bolt bosses) caps the pockets of the ring below and sets the gap to the ring above; where the gap is shorter than
+--min-spacer the ring reaches down and sits directly on the ring below, its own bottom face closing those pockets. Slab 0
+has a solid floor (--base). The top slab's pockets are open: the end cap (not generated here) closes them. --solid
+instead makes every slab reach down to the ring below (no spacers; most resin, every gap one printed dimension).
 
 Every pocket is the magnet cube plus a clearance on each local axis (x = magnetization, y, z = depth) and has:
-  - an engraved triangle on the slab's top face, just outside the N face (local +x, the magnetization direction),
-    pointing away from the pocket,
+  - a small V notch in the pocket wall at the N face (local +x, the magnetization direction), cut down from the top
+    face, so the outline of every pocket shows which way its N faces,
   - an air hole from the pocket floor through the bottom of the slab,
   - optional corner reliefs (SLA rounds inside corners, which would otherwise stop the cube seating).
 All slabs share M3 bolt holes outside the magnets (--outer-holes, evenly spaced with one shifted off the pattern so the
@@ -23,9 +25,12 @@ Usage:
   python make_ring_cad.py design.xlsx --tol 0.15 0.15 0.3 --outer-holes 8 --inner-holes 6 --inner-bolt 2 --inner-tol 0.4 --magnets
 
 Outputs in --out:
-  slab_<i>_z<z>.step/.stl   one per ring, numbered bottom (-z) to top (+z)
-  assembly.step             all parts in place (plus the magnets with --magnets)
-  slab_<i>_z<z>.png         top-view loading guide: pockets, N triangles and magnet counts per slab
+  slab_<i>_z<z>.step/.stl   one SLA ring per magnet z, numbered bottom (-z) to top (+z)
+  spacer_<i>-<j>_h<h>.step/.stl  FDM spacer between slabs i and j (print lid-plate down), height h
+  spacers.csv               spacer z ranges and heights
+  assembly.step             all slabs and spacers in place, one named component each
+  assembly_with_magnets.step  the same plus every magnet cube (with --magnets)
+  slab_<i>_z<z>.png         top-view loading guide: pockets, N notches and magnet counts per slab
   slabs.csv                 z range, thickness, magnet count and minimum walls per slab
 
 Ledger format as in the MRI4ALL scripts (X-pos, Y-pos, Z-pos, X-rot, Y-rot, Z-rot, Magnet_length; mm and degrees,
@@ -68,20 +73,23 @@ def pocket_outline(x, y, zrot, wx, wy):
     return loc @ rot2(zrot).T + [x, y]
 
 
-def triangle_outline(x, y, zrot, wx, side, gap):
-    """engraved N marker: base parallel to the N face, `gap` outside it, apex pointing along local +x"""
-    x0 = wx/2 + gap
-    loc = np.array([[x0, -side/2], [x0 + side*np.sqrt(3)/2, 0], [x0, side/2]])
+def notch_outline(x, y, zrot, wx, width, height, overlap=0.3):
+    """N marker: a V notch whose base lies on the pocket's N face (overlapping into the pocket so the cut merges) and
+    whose apex points `height` outward along local +x"""
+    x0 = wx/2
+    loc = np.array([[x0 - overlap, -width/2], [x0, -width/2], [x0 + height, 0], [x0, width/2], [x0 - overlap, width/2]])
     return loc @ rot2(zrot).T + [x, y]
 
 
-def pocket_boundary(x, y, zrot, wx, wy, relief, n_edge=60, n_arc=24):
-    """points on the true pocket outline: the square plus the corner relief circles"""
+def pocket_boundary(x, y, zrot, wx, wy, relief, mark=None, n_edge=60, n_arc=24):
+    """points on the true pocket outline: the square, the corner relief circles and (optionally) the N notch outline"""
     P = pocket_outline(x, y, zrot, wx, wy)
     pts = [P[i] + (P[(i+1) % 4] - P[i])*t for i in range(4) for t in np.linspace(0, 1, n_edge, endpoint=False)]
     if relief > 0:
         th = np.linspace(0, 2*np.pi, n_arc, endpoint=False)
         pts += [c + relief*np.array([np.cos(t), np.sin(t)]) for c in P for t in th]
+    if mark is not None:
+        pts += [mark[i] + (mark[i+1] - mark[i])*t for i in range(len(mark) - 1) for t in np.linspace(0, 1, 10)]
     return np.array(pts)
 
 
@@ -161,10 +169,11 @@ def place_inner_holes(n, d, r, obstacles, min_clear, step=0.25):
     return np.array([w[0] for w in chosen]), np.array([w[1] for w in chosen])
 
 
-def pocket_cutters(x, y, zrot, z_floor, wx, wy, depth, floor, relief=0.4, air_d=1.5, tri_side=2.5, tri_gap=0.4,
-                   tri_depth=0.4):
+def pocket_cutters(x, y, zrot, z_floor, wx, wy, depth, floor, relief=0.4, air_d=1.5, mark_width=2.0, mark_height=1.0,
+                   mark_depth=2.0):
     """solids to subtract for one magnet pocket open at the top face (z_floor + depth): the pocket (poking 1 mm out of
-    the top), corner reliefs, an air hole through the `floor` below it and the engraved N triangle on the top face"""
+    the top), corner reliefs, an air hole through the `floor` below it and the V notch on the N face, cut `mark_depth`
+    down from the top face"""
     parts = [cq.Solid.makeBox(wx, wy, depth + 1.0, pnt=cq.Vector(-wx/2, -wy/2, 0))]
     if relief > 0:
         for sx in (-1, 1):
@@ -172,12 +181,35 @@ def pocket_cutters(x, y, zrot, z_floor, wx, wy, depth, floor, relief=0.4, air_d=
                 parts.append(cq.Solid.makeCylinder(relief, depth + 1.0, cq.Vector(sx*wx/2, sy*wy/2, 0)))
     if air_d > 0 and floor > 0:
         parts.append(cq.Solid.makeCylinder(air_d/2, floor + 1.0, cq.Vector(0, 0, -floor - 0.5)))
-    if tri_side > 0:
-        T = triangle_outline(0, 0, 0, wx, tri_side, tri_gap)
-        parts.append(cq.Workplane('XY').workplane(offset=depth - tri_depth)
-                     .polyline([tuple(p) for p in T]).close().extrude(tri_depth + 1.0).val())
+    if mark_width > 0 and mark_height > 0:
+        T = notch_outline(0, 0, 0, wx, mark_width, mark_height)
+        parts.append(cq.Workplane('XY').workplane(offset=depth - min(mark_depth, depth))
+                     .polyline([tuple(p) for p in T]).close().extrude(min(mark_depth, depth) + 1.0).val())
     c = cq.Vector(x, y, z_floor)
     return [s.rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), zrot).translate(c) for s in parts]
+
+
+def make_spacer(z0, z1, od, bore, holes, lid=1.6, wall=2.0, ribs=16, rib=1.6, boss_wall=2.0, notch=1.0):
+    """FDM spacer between two rings, z0 (top of the ring below) to z1 (bottom of the ring above): a lid plate that caps
+    the pockets of the ring below, inner and outer walls, radial ribs and a boss around every bolt hole, open at the
+    top so it prints flat on the bed (lid down) without supports. holes: (x, y, hole diameter)."""
+    h = z1 - z0
+    ring = lambda ro, ri, hh: cq.Workplane('XY').workplane(offset=z0).circle(ro).circle(ri).extrude(hh).val()
+    body = ring(od/2, bore/2, lid)
+    body = body.fuse(ring(od/2, od/2 - wall, h), ring(bore/2 + wall, bore/2, h))
+    for k in range(ribs):
+        t = 360.0*k/ribs
+        r0, r1 = bore/2 + wall/2, od/2 - wall/2
+        rb = cq.Solid.makeBox(r1 - r0, rib, h, pnt=cq.Vector(r0, -rib/2, z0)).rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), t)
+        body = body.fuse(rb)
+    for (x, y, d) in holes:
+        body = body.fuse(cq.Solid.makeCylinder(d/2 + boss_wall, h, cq.Vector(x, y, z0)))
+    body = body.intersect(ring(od/2, bore/2, h))          # bosses near the bore or the outside are trimmed to the annulus
+    cut = [cq.Solid.makeCylinder(d/2, h + 2, cq.Vector(x, y, z0 - 1)) for (x, y, d) in holes]
+    if notch > 0:
+        cut.append(cq.Workplane('XY').workplane(offset=z0 - 1)
+                   .polyline([(od/2 - notch, 0), (od/2 + 1, -(notch + 1)), (od/2 + 1, notch + 1)]).close().extrude(h + 2).val())
+    return body.cut(*cut).clean()
 
 
 def main():
@@ -190,12 +222,27 @@ def main():
     ap.add_argument('--bore', type=float, default=100.0, help='inner diameter, mm')
     ap.add_argument('--od', type=float, default=None, help='outer diameter, mm (default: just fits pockets and outer holes)')
     ap.add_argument('--base', type=float, default=3.0, help='solid floor under the lowest ring of pockets, mm')
+    ap.add_argument('--solid', action='store_true',
+                    help='solid slabs that fill every gap (no spacers): each slab reaches down to the ring below')
+    ap.add_argument('--floor', type=float, default=2.0, help='floor under the pockets of the thin SLA rings, mm')
+    ap.add_argument('--min-spacer', type=float, default=3.0,
+                    help='gaps shorter than this get no spacer: the ring sits directly on the one below, mm')
+    ap.add_argument('--lid', type=float, default=1.6, help='spacer lid plate thickness (caps the pockets below), mm')
+    ap.add_argument('--spacer-wall', type=float, default=2.0, help='spacer inner/outer wall thickness, mm')
+    ap.add_argument('--ribs', type=int, default=16, help='radial ribs per spacer')
+    ap.add_argument('--rib', type=float, default=1.6, help='rib thickness, mm')
+    ap.add_argument('--boss-wall', type=float, default=2.0, help='plastic around each bolt hole in the spacers, mm')
+    ap.add_argument('--fdm-outer-tol', type=float, default=0.5, help='outer bolt clearance in the FDM spacers, mm')
+    ap.add_argument('--fdm-inner-tol', type=float, default=0.5, help='inner bolt clearance in the FDM spacers, mm')
+    ap.add_argument('--spacer-comp', type=float, default=0.0,
+                    help='added to every spacer CAD height to cancel the FDM printer height error measured with '
+                         'make_fdm_coupon.py (prints 0.1 mm tall -> -0.1), mm')
     ap.add_argument('--min-wall', type=float, default=1.5, help='warn below this wall/floor thickness, mm')
     ap.add_argument('--air-d', type=float, default=1.5, help='air hole diameter, mm (0 = none)')
     ap.add_argument('--relief', type=float, default=0.4, help='corner relief radius, mm (0 = none)')
-    ap.add_argument('--tri-side', type=float, default=2.5, help='N triangle side length, mm')
-    ap.add_argument('--tri-gap', type=float, default=0.4, help='gap between pocket N face and triangle, mm')
-    ap.add_argument('--tri-depth', type=float, default=0.4, help='N triangle engraving depth, mm')
+    ap.add_argument('--mark-width', type=float, default=2.0, help='width of the N notch where it meets the pocket face, mm (0 = none)')
+    ap.add_argument('--mark-height', type=float, default=1.0, help='how far the N notch reaches into the wall, mm')
+    ap.add_argument('--mark-depth', type=float, default=2.0, help='how far the N notch runs down from the top face, mm')
     ap.add_argument('--outer-holes', type=int, default=8, help='bolt holes through the stack outside the magnets (0 = none)')
     ap.add_argument('--outer-bolt', type=float, default=3.0, help='outer bolt diameter, mm (3 = M3)')
     ap.add_argument('--outer-tol', type=float, default=0.4, help='clearance added to the outer bolt diameter, mm')
@@ -210,7 +257,7 @@ def main():
     ap.add_argument('--hole-wall', type=float, default=0.8,
                     help='minimum resin between an inner hole and the bore or any pocket, mm')
     ap.add_argument('--notch', type=float, default=1.0, help='depth of the +x (B0) notch on the outside, mm (0 = none)')
-    ap.add_argument('--magnets', action='store_true', help='include the magnet cubes in assembly.step')
+    ap.add_argument('--magnets', action='store_true', help='also write assembly_with_magnets.step')
     ap.add_argument('--no-step', action='store_true', help='skip STEP export (faster; STL and PNG only)')
     args = ap.parse_args()
     args.outer_d = args.outer_bolt + args.outer_tol
@@ -229,9 +276,9 @@ def main():
     wx, wy, depth = a + tx, a + ty, a + tz
     rel = args.relief
 
-    # outline of everything cut into the top face, per magnet: pocket (grown by the corner reliefs) and triangle
+    # outline of everything cut into the top face, per magnet: pocket (grown by the corner reliefs) and N notch
     pockets = [pocket_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx + 2*rel, wy + 2*rel) for _, r in L.iterrows()]
-    tris = [triangle_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx, args.tri_side, args.tri_gap) for _, r in L.iterrows()]
+    tris = [notch_outline(r['X-pos'], r['Y-pos'], r['Z-rot'], wx, args.mark_width, args.mark_height) for _, r in L.iterrows()]
 
     r_corner_max = max(np.hypot(*P.T).max() for P in pockets + tris)
     r_out = r_corner_max + args.min_wall + args.outer_d/2
@@ -239,8 +286,10 @@ def main():
     if args.od:
         r_out = od/2 - args.min_wall - args.outer_d/2
     holes = []      # (x, y, diameter), through every slab
+    fdm_holes = []  # the same holes with the FDM clearances, for the spacers
     for t in outer_hole_angles(args.outer_holes, args.hole_key):
         holes.append((r_out*np.cos(np.deg2rad(t)), r_out*np.sin(np.deg2rad(t)), args.outer_d))
+        fdm_holes.append((holes[-1][0], holes[-1][1], args.outer_bolt + args.fdm_outer_tol))
     r_in = args.bore/2 + args.hole_wall + args.inner_d/2
     if args.inner_holes > 0:
         ang_in, clr_in = place_inner_holes(args.inner_holes, args.inner_d, r_in, pockets + tris, args.hole_wall)
@@ -249,10 +298,25 @@ def main():
                                                          for t, c in zip(ang_in, clr_in)))
         for t in ang_in:
             holes.append((r_in*np.cos(np.deg2rad(t)), r_in*np.sin(np.deg2rad(t)), args.inner_d))
+            fdm_holes.append((holes[-1][0], holes[-1][1], args.inner_bolt + args.fdm_inner_tol))
 
-    # slab z boundaries: slab i spans [bottom_i, top_i], top_i = top of its pockets
+    # slab z boundaries: slab i spans [bottom_i, top_i], top_i = top of its pockets. Solid: every slab reaches down to
+    # the slab below. Otherwise each ring is pockets + floor and the gap to the ring below gets an FDM spacer, unless it
+    # is shorter than --min-spacer, in which case the ring reaches down and sits on the ring below as in the solid case.
     tops = zs + depth/2
-    bottoms = np.concatenate([[zs[0] - depth/2 - args.base], tops[:-1]])
+    spacers = []    # (index of the ring above, z bottom, z top)
+    if args.solid:
+        bottoms = np.concatenate([[zs[0] - depth/2 - args.base], tops[:-1]])
+    else:
+        bottoms = [zs[0] - depth/2 - args.base]
+        for k in range(1, len(zs)):
+            want = zs[k] - depth/2 - args.floor
+            if want - tops[k-1] < args.min_spacer:
+                bottoms.append(tops[k-1])
+            else:
+                bottoms.append(want)
+                spacers.append((k, tops[k-1], want))
+        bottoms = np.array(bottoms)
 
     print(f'{len(L)} magnets, {len(zs)} slabs; pocket {wx:.2f} x {wy:.2f} x {depth:.2f} mm; '
           f'bore {args.bore:.1f}, OD {od:.1f} mm; {args.outer_holes} outer holes x {args.outer_d} mm at r {r_out:.1f}')
@@ -269,17 +333,12 @@ def main():
 
         # wall checks in the plane of this slab
         # thinnest resin between neighbouring pockets, from their true outlines (square + corner reliefs)
-        outl = [pocket_boundary(L['X-pos'].iloc[j], L['Y-pos'].iloc[j], L['Z-rot'].iloc[j], wx, wy, rel) for j in idx]
+        outl = [pocket_boundary(L['X-pos'].iloc[j], L['Y-pos'].iloc[j], L['Z-rot'].iloc[j], wx, wy, rel, tris[j]) for j in idx]
         min_pp = np.inf
         for j in range(len(idx)):
             for k in range(j+1, len(idx)):
                 if np.linalg.norm(outl[j].mean(0) - outl[k].mean(0)) < 2*np.sqrt(2)*max(wx, wy) + 1:
                     min_pp = min(min_pp, cKDTree(outl[k]).query(outl[j])[0].min())
-        min_tri = np.inf
-        for j in idx:
-            for k in idx:
-                if j != k and np.linalg.norm(tris[j].mean(0) - pockets[k].mean(0)) < 2*max(wx, wy) + args.tri_side:
-                    min_tri = min(min_tri, polygon_gap(tris[j], pockets[k]))
         min_bore = min(np.hypot(*pockets[j].T).min() for j in idx) - args.bore/2
         min_od = od/2 - max(np.hypot(*np.vstack([pockets[j], tris[j]]).T).max() for j in idx)
         obst = [pockets[j] for j in idx] + [tris[j] for j in idx]
@@ -293,16 +352,13 @@ def main():
                         ('wall to outside', min_od), ('wall to bolt hole', min_rod)]:
             if v < args.min_wall:
                 warnings.append(f'slab {i} (z {z:+.2f}): {name} {v:.2f} mm < {args.min_wall} mm')
-        if min_tri < 0:
-            warnings.append(f'slab {i} (z {z:+.2f}): an N triangle runs into a neighbouring pocket '
-                            f'(reduce --tri-side/--tri-gap); markers stay readable but check the loading guide')
 
         # solid
         slab = cq.Workplane('XY').workplane(offset=z_bot).circle(od/2).circle(args.bore/2).extrude(z_top - z_bot).val()
         cutters = []
         for _, r in sub.iterrows():
             cutters += pocket_cutters(r['X-pos'], r['Y-pos'], r['Z-rot'], z - depth/2, wx, wy, depth, floor, rel,
-                                      args.air_d, args.tri_side, args.tri_gap, args.tri_depth)
+                                      args.air_d, args.mark_width, args.mark_height, args.mark_depth)
         for (x, y, hd) in holes:
             cutters.append(cq.Solid.makeCylinder(hd/2, z_top - z_bot + 2, cq.Vector(x, y, z_bot - 1)))
         if args.notch > 0:
@@ -313,7 +369,7 @@ def main():
         slab = slab.cut(*cutters)
 
         # sanity check: pocket centres are empty, walls next to the N and side faces are solid,
-        # and the triangle on the N side is engraved
+        # and the N notch is cut
         for _, r in sub.iterrows():
             R2 = rot2(r['Z-rot'])
             c2 = np.array([r['X-pos'], r['Y-pos']])
@@ -321,8 +377,8 @@ def main():
                 p = c2 + R2 @ np.array(local_xy)
                 return slab.isInside(cq.Vector(p[0], p[1], zz), 1e-4)
             assert not solid_at((0, 0), z), 'pocket centre is not empty'
-            tri_c = triangle_outline(0, 0, 0, wx, args.tri_side, args.tri_gap).mean(0)
-            assert not solid_at(tri_c, z_top - args.tri_depth/2), 'N triangle missing'
+            if args.mark_width > 0:
+                assert not solid_at((wx/2 + args.mark_height/3, 0), z_top - args.mark_depth/2), 'N notch missing'
             assert solid_at((-(wx/2 + rel + 0.3), 0), z), 'no wall behind the S face'
         name = f'slab_{i}_z{z:+.2f}'
         cq.exporters.export(cq.Workplane().add(slab), os.path.join(args.out, name + '.stl'), tolerance=0.01, angularTolerance=0.1)
@@ -345,12 +401,13 @@ def main():
         ax.annotate('+x (B0), notch', (od/2, 0), (od/2 + 4, 6), fontsize=8)
         ax.set_aspect('equal')
         ax.set_title(f'{name}: {len(idx)} magnets, slab {z_bot:+.2f} to {z_top:+.2f} mm (thickness {z_top - z_bot:.2f}), '
-                     f'viewed from +z\nred triangle = N face of the magnet (magnetization direction)', fontsize=9)
+                     f'viewed from +z\nred notch = N face of the magnet (magnetization direction)', fontsize=9)
         ax.set_xlabel('x (mm)'); ax.set_ylabel('y (mm)')
         fig.savefig(os.path.join(args.out, name + '.png'), dpi=150, bbox_inches='tight')
         plt.close(fig)
 
         rows.append(dict(slab=i, ring_z=z, bottom=z_bot, top=z_top, thickness=z_top - z_bot, magnets=len(idx),
+                         volume_cm3=slab.Volume()/1000,
                          floor=floor, min_wall_pockets=min_pp, min_wall_bore=min_bore, min_wall_outside=min_od,
                          min_wall_outer_bolts=min_rod, min_wall_inner_bolts=min_inner))
         print(f'  slab {i}: z {z:+7.2f}, {len(idx):3d} magnets, {z_bot:+7.2f} to {z_top:+7.2f} mm '
@@ -358,20 +415,49 @@ def main():
               f'outside {min_od:.2f}, outer bolts {min_rod:.2f}, inner bolts {min_inner:.2f}')
 
 
+    sp_rows = []
+    for k, z0, z1 in spacers:
+        h = z1 - z0
+        sp = make_spacer(z0, z1 + args.spacer_comp, od, args.bore, fdm_holes, args.lid, args.spacer_wall, args.ribs,
+                         args.rib, args.boss_wall, args.notch)
+        name = f'spacer_{k-1}-{k}_h{h:.2f}'
+        cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, name + '.stl'), tolerance=0.02, angularTolerance=0.1)
+        if not args.no_step:
+            cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, name + '.step'))
+        parts.append((name, sp))
+        sp_rows.append(dict(spacer=name, between_slabs=f'{k-1}/{k}', bottom=z0, top=z1, height=h,
+                            cad_height=h + args.spacer_comp, volume_cm3=sp.Volume()/1000))
+        print(f'  spacer between slabs {k-1}/{k}: {z0:+7.2f} to {z1:+7.2f} mm, height {h:.2f} mm '
+              f'(CAD {h + args.spacer_comp:.2f}), {sp.Volume()/1000:.0f} cm3')
+    if sp_rows:
+        pd.DataFrame(sp_rows).to_csv(os.path.join(args.out, 'spacers.csv'), index=False)
+
     if not args.no_step:
-        assy = cq.Assembly()
-        for name, s in parts:
-            assy.add(s, name=name, color=cq.Color(0.8, 0.8, 0.85, 1))
+        # assembly.step: one named component per slab, in place, so it imports as an assembly of the ring files;
+        # assembly_with_magnets.step adds the cubes (one sub-assembly per slab) for interference checks and renders
+        def build(with_magnets):
+            assy = cq.Assembly(name='magnet_holder')
+            for i, (name, s) in enumerate(parts):
+                color = cq.Color(0.2, 0.45, 0.8, 1) if name.startswith('spacer') else cq.Color(0.8, 0.8, 0.85, 1)
+                assy.add(s, name=name, color=color)
+            if with_magnets:
+                for i, z in enumerate(zs):
+                    sub = cq.Assembly(name=f'magnets_{i}')
+                    for j in np.where(zkey.values == round(z, 3))[0]:
+                        r = L.iloc[j]
+                        cube = (cq.Solid.makeBox(a, a, a, pnt=cq.Vector(-a/2, -a/2, -a/2))
+                                .rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), r['Z-rot'])
+                                .translate(cq.Vector(r['X-pos'], r['Y-pos'], r['Z-pos'])))
+                        sub.add(cube, name=f'magnet_{j}', color=cq.Color(0.8, 0.1, 0.1, 1))
+                    assy.add(sub)
+            return assy
+        build(False).export(os.path.join(args.out, 'assembly.step'))
         if args.magnets:
-            for j, r in L.iterrows():
-                cube = (cq.Solid.makeBox(a, a, a, pnt=cq.Vector(-a/2, -a/2, -a/2))
-                        .rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), r['Z-rot'])
-                        .translate(cq.Vector(r['X-pos'], r['Y-pos'], r['Z-pos'])))
-                assy.add(cube, name=f'magnet_{j}', color=cq.Color(0.8, 0.1, 0.1, 1))
-        assy.save(os.path.join(args.out, 'assembly.step'))
+            build(True).export(os.path.join(args.out, 'assembly_with_magnets.step'))
 
     pd.DataFrame(rows).to_csv(os.path.join(args.out, 'slabs.csv'), index=False)
-    print(f'stack {bottoms[0]:+.2f} to {tops[-1]:+.2f} mm ({tops[-1] - bottoms[0]:.1f} mm long, without end caps)')
+    print(f'stack {bottoms[0]:+.2f} to {tops[-1]:+.2f} mm ({tops[-1] - bottoms[0]:.1f} mm long, without end caps); '
+          f'SLA {sum(r["volume_cm3"] for r in rows):.0f} cm3' + (f', FDM spacers {sum(r["volume_cm3"] for r in sp_rows):.0f} cm3' if sp_rows else ''))
     for w in warnings:
         print('  WARNING:', w)
     print(f'wrote {len(parts)} parts to {args.out}')
