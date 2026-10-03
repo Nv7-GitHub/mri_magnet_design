@@ -102,6 +102,49 @@ check points; more seeds would be needed to call this general.
   `python refine_minimax.py results/REFINED_from_FINAL_bore100_cyl40x40_649mag_3layer.xlsx out.xlsx --radial --rounds 4`
 - `optimize_bore50mm_*.py`: earlier iterations for a 50 mm magnet bore, kept for reference.
 
+## Holder CAD
+
+`make_ring_cad.py` turns a ledger into printable ring slabs (STEP/STL), one per ring z, plus a top-view loading guide
+(PNG) per slab. Each slab's top face is level with the top of its pockets, so the slab above closes them and stacking sets
+the ring spacing; slab 0 has a 3 mm floor, the top slab is closed by the end cap (not generated). Pockets are the cube plus
+a clearance per local axis (`--tol x y z`), with corner reliefs, an air hole through the floor and an engraved triangle
+on the N (magnetization) side. 8 M3 holes outside the magnets (one shifted 10 degrees so the stack only goes together one
+way) and 6 M2 holes between the bore and the inner magnets, placed where they clear the pockets of every slab; M3 does
+not fit inside (only ~2.3 mm of resin between the 100 mm bore and the inner pockets). Bolt clearances are separate
+(`--outer-tol`, `--inner-tol`). A V notch on the outside marks +x (B0).
+
+```bash
+python make_test_coupon.py --out cad/coupon        # print first: pocket clearances x rotations, thin walls, bolt holes
+python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out cad/best --tol 0.15 0.15 0.3 \
+    --outer-tol 0.4 --inner-tol 0.4 --magnets
+```
+
+For the recommended design: OD 193.6 mm, stack 147.2 mm without end caps, slabs 9.35-25.9 mm thick. The thinnest
+resin between neighbouring pockets is 1.02 mm (0.15 mm clearance, 0.4 mm corner reliefs); these are pinch points where
+two pocket corners nearly meet, under 1.5 mm for only 0.1-0.3 mm along a face. The coupon's 0.6/0.8/1.0 mm pairs test
+them. The +z and -z slabs are not identical (the slab boundaries are not mirror symmetric), so all 9 are printed
+from their own files. Print every slab with the same resin, wash and cure, and turn every other slab 90 degrees about
+its own axis on the build plate so print ovality alternates through the stack (the slabs themselves always assemble in
+the keyed orientation).
+
+### Forces, bolts and resin
+
+`check_bolt_loads.py` computes the force on every magnet from the surface-charge model (exact for rigid magnets) and the
+load each joint between slabs puts on the bolts (positions as placed by `make_ring_cad.py`):
+
+- Per magnet: median 1.25 N, max 2.9 N.
+- Separating force across a joint: 20-73 N (largest at the joints between slabs 1/2 and 7/8), 39.5 N on each end cap;
+  shear up to 9.8 N between the two outermost slabs; torques about z under 0.06 N m.
+- Shared by 8 M3 + 6 M2 bolts: at most 8.7 N per M3 and 3.2 N per M2. Brass (CW614N/C360, taking a conservative 150 MPa
+  yield) holds ~750 N (M3) and ~310 N (M2), a margin of ~90x. Brass is non-magnetic; avoid 18-8 stainless, whose
+  cold-worked threads can be slightly magnetic. The stack is ~150 mm plus caps, so M3 brass threaded rod with nuts is
+  the practical form. A light preload (snug, ~0.1-0.2 N m on M3 with washers) is far more than the 5-9 N per bolt
+  needed to keep joints closed and avoids crushing or creeping the resin; friction from it also carries the shear.
+- Rigid 4000 (tensile 69 MPa, flexural 105 MPa, glass-filled for low creep): pressing the worst-loaded magnet (2.9 N)
+  on a 1.0 mm wall treated as a full-height cantilever gives ~10 MPa, 7x below tensile strength, and the real thin spots
+  are corner pinch points backed by thicker resin, so actual stresses are much lower. Average contact pressure on a
+  pocket face is ~0.07 MPa, far below the 0.45 MPa at which its 77 C heat-deflection temperature is rated.
+
 ## Reproducing the recommended design
 
 ```bash

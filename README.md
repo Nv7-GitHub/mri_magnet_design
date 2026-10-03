@@ -31,4 +31,5 @@ The required iHc only covers the finished array. Handling during assembly can be
 ## Compact magnet design study (this fork)
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools
-added for it (`optimize_robust_aligned.py`, `refine_minimax.py`, as-built tolerance analysis), and what was learned.
+added for it (`optimize_robust_aligned.py`, `refine_minimax.py`, as-built tolerance analysis), the ring-holder CAD generator (`make_ring_cad.py`,
+`make_test_coupon.py`, `check_bolt_loads.py`), and what was learned.
