@@ -2,15 +2,15 @@
 FDM test coupon for the spacers made by make_ring_cad.py: print it with the same printer, material, layer height and
 slicer settings as the spacers, then
 
-  1. measure each height sample with calipers across its walls (the spacer heights set the ring spacing, which needs
+  1. measure each height sample with calipers at its corners and centre (the spacer heights set the ring spacing, which needs
      ~0.05 mm: see DESIGN_NOTES.md). The average (printed - nominal) is the printer's height error: pass minus that to
      make_ring_cad.py as --spacer-comp. If the error grows with height (a scale error rather than an offset), print
      at a layer height that divides the spacer heights or fix the printer's z steps first.
   2. test-fit the bolts in the hole bars and pass the clearance that slides freely as --fdm-outer-tol / --fdm-inner-tol.
 
-Layout, all on one plate as thick as the spacer lid plate:
-  - one height sample per spacer height (--heights): a square tube with a rib across, like a piece of a spacer,
-    with its nominal height engraved on the plate in front of it,
+Layout, all joined by a thin base plate:
+  - one height sample per spacer height (--heights): a solid block (sliced with the spacers' walls and infill, like a
+    piece of a spacer) with its nominal height engraved on the plate in front of it,
   - one bar per bolt size (--bolts) with one hole per clearance (--hole-tols), the clearance engraved next to each hole.
 
 Usage:
@@ -39,9 +39,8 @@ def main():
     ap.add_argument('--bolts', type=float, nargs='+', default=[3.0, 2.0], help='bolt diameters, mm')
     ap.add_argument('--hole-tols', type=float, nargs='+', default=[0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
                     help='bolt hole clearances to test, mm (FDM holes print small)')
-    ap.add_argument('--lid', type=float, default=1.6, help='plate thickness = spacer lid plate, mm')
-    ap.add_argument('--wall', type=float, default=2.0, help='sample wall thickness = spacer walls, mm')
-    ap.add_argument('--sample', type=float, default=20.0, help='height sample footprint, mm')
+    ap.add_argument('--plate', type=float, default=1.6, help='base plate joining the samples, mm')
+    ap.add_argument('--sample', type=float, default=20.0, help='height sample footprint, mm (big enough to get infill)')
     ap.add_argument('--bar-h', type=float, default=6.0, help='height of the bolt hole bars, mm')
     ap.add_argument('--text', type=float, default=4.0, help='label height, mm')
     ap.add_argument('--text-depth', type=float, default=0.6, help='label engraving depth, mm')
@@ -53,22 +52,18 @@ def main():
     bar_w = max(args.bolts) + max(args.hole_tols) + 3.0 + th + 1.0       # holes along one side, labels along the other
     width = 2*m + max(len(args.heights)*(s + gap) - gap, len(args.hole_tols)*hole_pitch)
     depth_y = m + (th + 2) + s + gap + len(args.bolts)*(bar_w + gap) - gap + m
-    print(f'FDM coupon {width:.1f} x {depth_y:.1f} mm, plate {args.lid} mm, tallest {max(args.heights):.2f} mm')
+    print(f'FDM coupon {width:.1f} x {depth_y:.1f} mm, plate {args.plate} mm, tallest {max(args.heights):.2f} mm')
 
-    body = cq.Workplane('XY').box(width, depth_y, args.lid, centered=False).val()
+    body = cq.Workplane('XY').box(width, depth_y, args.plate, centered=False).val()
     adds, cuts = [], []
 
-    # height samples: square tube + one rib, nominal height engraved on the plate in front of it
+    # height samples: solid blocks, nominal height engraved on the plate in front of each
     y_lab = m + (th + 2)/2
     y0 = m + th + 2
     for k, h in enumerate(args.heights):
         x0 = m + k*(s + gap)
-        tube = (cq.Workplane('XY').rect(s, s, centered=False).extrude(h).translate((x0, y0, 0))
-                .cut(cq.Workplane('XY').rect(s - 2*args.wall, s - 2*args.wall, centered=False)
-                     .extrude(h + 2).translate((x0 + args.wall, y0 + args.wall, args.lid))).val())
-        rib = cq.Solid.makeBox(args.wall, s, h, pnt=cq.Vector(x0 + s/2 - args.wall/2, y0, 0))
-        adds += [tube, rib]
-        cuts.append(engrave(f'{h:.2f}', x0 + s/2, y_lab, args.lid, th*0.8, min(args.text_depth, args.lid/2)))
+        adds.append(cq.Solid.makeBox(s, s, h, pnt=cq.Vector(x0, y0, 0)))
+        cuts.append(engrave(f'{h:.2f}', x0 + s/2, y_lab, args.plate, th*0.8, min(args.text_depth, args.plate/2)))
 
     # bolt hole bars
     y = y0 + s + gap
@@ -82,7 +77,7 @@ def main():
             cuts.append(engrave(f'{t:.1f}'.lstrip('0'), xh, y + bar_w - 1 - th/2, args.bar_h, th*0.8, args.text_depth))
         cuts.append(engrave(f'M{b:g}', width - m - th, y + bar_w/2, args.bar_h, th*0.8, args.text_depth)
                     if len(args.hole_tols)*hole_pitch + 2*th < width - 2*m else
-                    engrave(f'M{b:g}', m + 0.6*th, y + bar_w/2, args.lid, th*0.6, args.lid/2))
+                    engrave(f'M{b:g}', m + 0.6*th, y + bar_w/2, args.plate, th*0.6, args.plate/2))
         y += bar_w + gap
 
     body = body.fuse(*adds).clean()

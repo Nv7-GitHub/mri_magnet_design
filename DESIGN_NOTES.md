@@ -115,8 +115,8 @@ design choices.
   notch in the wall at the N (magnetization) face. Where two rings are closer than 3 mm + ring thickness (slabs 0/1 and
   7/8, 9.35 mm apart) the upper ring reaches down and sits directly on the lower one. Slab 0 has a 3 mm floor; the top
   slab is closed by the end cap (not generated).
-- **FDM spacers** in the other gaps: a 1.6 mm lid plate that caps the pockets of the ring below, 2 mm inner and outer
-  walls, 16 radial ribs and a boss around every bolt hole, open on top so they print lid-down without supports. For the
+- **FDM spacers** in the other gaps: solid rings (bore to OD, with the bolt holes) whose bottom face caps the pockets of
+  the ring below; the slicer adds walls and infill, and they print flat without supports. For the
   recommended design: three heights (6.06, 10.21, 17.22 mm), one file each, each printed twice (the +z and -z spacers
   are identical).
   `--solid` instead makes every SLA slab fill the gap below it (no spacers).
@@ -136,7 +136,7 @@ python check_bolt_loads.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx
 ```
 
 For the recommended design: OD 193.6 mm, stack 147.2 mm without end caps, 1.5 L of SLA resin (2.9 L with `--solid`)
-and 0.38 L of FDM spacers. The thinnest resin between neighbouring pockets is 1.02 mm (0.15 mm clearance, 0.4 mm corner
+and FDM spacers enclosing 1.4 L (plastic used depends on infill). The thinnest resin between neighbouring pockets is 1.02 mm (0.15 mm clearance, 0.4 mm corner
 reliefs); these are pinch points where two pocket corners nearly meet, under 1.5 mm for only 0.1-0.3 mm along a face. The
 SLA coupon's 0.6/0.8/1.0 mm pairs test them. The +z and -z SLA rings are not identical (the slab boundaries are not mirror
 symmetric), so all 9 are printed from their own files. Print every ring with the same resin, wash and cure, and turn

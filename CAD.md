@@ -14,7 +14,7 @@ For the recommended design (`results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx`: 
 | Part | Process | Count | Notes |
 |---|---|---|---|
 | Ring slabs `slab_0` ... `slab_8` | SLA (Formlabs Form 4, Rigid 4000) | 9, all different | Magnet pockets open at the top face; 8.65-9.65 mm thick, OD 193.6 mm |
-| Spacers `spacer_h<height>` | FDM (PETG or PLA) | 3 files, each printed 2x | Fill the gaps between rings and cap the magnets of the ring below |
+| Spacers `spacer_h<height>` | FDM (PETG or PLA) | 3 files, each printed 2x | Solid rings that fill the gaps between rings and cap the magnets of the ring below |
 | SLA tolerance coupon | SLA, same as the rings | 1 | Pocket fit, thin walls, bolt holes |
 | FDM tolerance coupon | FDM, same as the spacers | 1 | Spacer height accuracy, bolt holes |
 | End caps | your own design | 2 | Not generated: close the top slab's pockets and clamp the stack |
@@ -25,7 +25,7 @@ Side view of the stack (z is the bore axis; B0 points along +x, marked by a V no
   +z   end cap (yours)
        slab 8   [■ ■ ■]        pockets open at the top, closed by the end cap
        slab 7   [■ ■ ■]        slab 8 sits directly on slab 7 (rings only 9.35 mm apart)
-       spacer_h6.06  ═╤══╤═    FDM: lid plate caps slab 6's magnets, walls + ribs set the gap
+       spacer_h6.06  ══════    FDM: solid ring; its bottom face caps slab 6's magnets, its height sets the gap
        slab 6   [■ ■ ■]
        spacer_h17.22
        slab 5   [■ ■ ■]
@@ -95,7 +95,7 @@ The layout is shown in `cad/coupon/tolerance_coupon.png`; every value is engrave
 you will use for the spacers**, flat on the bed.
 
 - **Height samples** (6.06 / 10.21 / 17.22 mm, engraved in front): these are the three spacer heights. Measure each
-  with calipers across its walls at a few points and average. The spacers set the distance between magnet rings, which
+  with calipers at its corners and centre and average. The spacers set the distance between magnet rings, which
   matters at the 0.05 mm level, so this is the most important measurement.
   `--spacer-comp` = nominal - measured (average over the three; e.g. if they print 0.10 mm tall, `--spacer-comp -0.1`).
   If the error grows with height (a scale error rather than a constant offset), fix the printer's z calibration or
@@ -141,8 +141,11 @@ Then look at the loading guides `cad/best/slab_<i>_z<z>.png` and, in any CAD vie
 
 ### 5. Print the spacers (FDM)
 
-- Print each spacer **lid plate down**, flat on the bed; no supports needed. Bed must be at least 194 mm.
-- PETG or PLA, the same settings as the FDM coupon.
+- The spacers are solid rings in CAD: the slicer adds walls and infill. Print them flat on the bed, no supports; the bed
+  must be at least 194 mm. Use the same material, layer height, walls, infill and top/bottom layers as the FDM coupon
+  (the coupon's height samples are solid blocks for the same reason), and enough top layers for a flat top face, since
+  the top and bottom faces set the ring spacing.
+- PETG or PLA.
 - Print **two of each** spacer file (`spacer_h6.06`, `spacer_h10.21`, `spacer_h17.22`): the +z and -z spacers are the
   same part. `cad/best/spacers.csv` lists which slabs each one goes between.
 - Measure every spacer's height at several points around the ring. It should match the height in its file name to
@@ -161,7 +164,7 @@ threads can be slightly magnetic.
    pole identifier or a compass: the compass needle's north-seeking end points at the magnet's **S** face.
 4. Add the next part:
    - `slab_1` sits directly on `slab_0` and closes its pockets; `slab_8` likewise sits directly on `slab_7`;
-   - every other slab gets its spacer first, lid plate down: slab 1 -> `spacer_h6.06` -> slab 2 -> `spacer_h17.22` ->
+   - every other slab gets its spacer first: slab 1 -> `spacer_h6.06` -> slab 2 -> `spacer_h17.22` ->
      slab 3 -> `spacer_h10.21` -> slab 4 -> `spacer_h10.21` -> slab 5 -> `spacer_h17.22` -> slab 6 -> `spacer_h6.06` ->
      slab 7 (the order is also in `cad/best/spacers.csv`).
    Load each slab's magnets before putting the next part on it.
@@ -209,7 +212,6 @@ All scripts print their full option list with `--help`. Lengths in mm.
 | `--floor` | `2` | Floor under the pockets of the other rings |
 | `--min-spacer` | `3` | Gaps shorter than this get no spacer; the ring sits on the one below |
 | `--solid` | off | No spacers: every slab fills the gap below it (2.9 L of resin instead of 1.5 L) |
-| `--lid`, `--spacer-wall`, `--ribs`, `--rib`, `--boss-wall` | `1.6`, `2`, `16`, `1.6`, `2` | Spacer lid plate, walls, rib count and thickness, plastic around bolt holes |
 | `--spacer-comp` | `0` | Added to every spacer's CAD height (from the FDM coupon) |
 | `--outer-holes`, `--outer-bolt`, `--outer-tol` | `8`, `3`, `0.4` | Outer bolts: count, diameter (M3), SLA clearance |
 | `--inner-holes`, `--inner-bolt`, `--inner-tol` | `6`, `2`, `0.4` | Inner bolts: count, diameter (M2), SLA clearance; placed automatically where they clear all pockets |
@@ -234,7 +236,7 @@ Uses the same pocket function as the rings, so a fit on the coupon is the fit in
 ### `make_fdm_coupon.py` (FDM)
 
 `--heights` (default `6.06 10.21 17.22`, the spacer heights; take them from `spacers.csv` for another design),
-`--bolts` (`3 2`), `--hole-tols` (`0.2 ... 0.7`), `--lid` (`1.6`), `--wall` (`2`), `--sample`, `--bar-h`, `--text`,
+`--bolts` (`3 2`), `--hole-tols` (`0.2 ... 0.7`), `--plate` (`1.6`), `--sample` (`20`), `--bar-h`, `--text`,
 `--text-depth`.
 
 ### `check_bolt_loads.py <ledger.xlsx>`

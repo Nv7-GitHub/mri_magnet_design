@@ -2,8 +2,8 @@
 Generate printable ring holders (a stack of slabs with a bore) from a magnet ledger.
 
 Each distinct magnet z in the ledger becomes one SLA ring: its magnet pockets open at the top face over a thin floor
-(--floor), the top face level with the top of the pockets. Between rings, an FDM spacer (lid plate + walls + ribs +
-bolt bosses) caps the pockets of the ring below and sets the gap to the ring above; where the gap is shorter than
+(--floor), the top face level with the top of the pockets. Between rings, a solid FDM spacer ring caps the pockets of the
+ring below and sets the gap to the ring above; where the gap is shorter than
 --min-spacer the ring reaches down and sits directly on the ring below, its own bottom face closing those pockets. Slab 0
 has a solid floor (--base). The top slab's pockets are open: the end cap (not generated here) closes them. --solid
 instead makes every slab reach down to the ring below (no spacers; most resin, every gap one printed dimension).
@@ -26,7 +26,7 @@ Usage:
 
 Outputs in --out:
   slab_<i>_z<z>.step/.stl   one SLA ring per magnet z, numbered bottom (-z) to top (+z)
-  spacer_h<h>.step/.stl     FDM spacer of height h (print lid-plate down); one file per distinct height,
+  spacer_h<h>.step/.stl     FDM spacer of height h (solid; the slicer adds infill); one file per distinct height,
                             printed once per position listed in spacers.csv
   spacers.csv               spacer positions (between which slabs), z ranges, heights and part file
   assembly.step             magnet_holder > sla_rings (slabs) + fdm_spacers (instances of the spacer parts), in place
@@ -190,22 +190,12 @@ def pocket_cutters(x, y, zrot, z_floor, wx, wy, depth, floor, relief=0.4, air_d=
     return [s.rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), zrot).translate(c) for s in parts]
 
 
-def make_spacer(z0, z1, od, bore, holes, lid=1.6, wall=2.0, ribs=16, rib=1.6, boss_wall=2.0, notch=1.0):
-    """FDM spacer between two rings, z0 (top of the ring below) to z1 (bottom of the ring above): a lid plate that caps
-    the pockets of the ring below, inner and outer walls, radial ribs and a boss around every bolt hole, open at the
-    top so it prints flat on the bed (lid down) without supports. holes: (x, y, hole diameter)."""
+def make_spacer(z0, z1, od, bore, holes, notch=1.0):
+    """FDM spacer between two rings, z0 (top of the ring below) to z1 (bottom of the ring above): a solid annulus (the
+    slicer adds walls and infill) whose bottom face caps the pockets of the ring below, with the bolt holes and the +x
+    notch. holes: (x, y, hole diameter)."""
     h = z1 - z0
-    ring = lambda ro, ri, hh: cq.Workplane('XY').workplane(offset=z0).circle(ro).circle(ri).extrude(hh).val()
-    body = ring(od/2, bore/2, lid)
-    body = body.fuse(ring(od/2, od/2 - wall, h), ring(bore/2 + wall, bore/2, h))
-    for k in range(ribs):
-        t = 360.0*k/ribs
-        r0, r1 = bore/2 + wall/2, od/2 - wall/2
-        rb = cq.Solid.makeBox(r1 - r0, rib, h, pnt=cq.Vector(r0, -rib/2, z0)).rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), t)
-        body = body.fuse(rb)
-    for (x, y, d) in holes:
-        body = body.fuse(cq.Solid.makeCylinder(d/2 + boss_wall, h, cq.Vector(x, y, z0)))
-    body = body.intersect(ring(od/2, bore/2, h))          # bosses near the bore or the outside are trimmed to the annulus
+    body = cq.Workplane('XY').workplane(offset=z0).circle(od/2).circle(bore/2).extrude(h).val()
     cut = [cq.Solid.makeCylinder(d/2, h + 2, cq.Vector(x, y, z0 - 1)) for (x, y, d) in holes]
     if notch > 0:
         cut.append(cq.Workplane('XY').workplane(offset=z0 - 1)
@@ -228,11 +218,6 @@ def main():
     ap.add_argument('--floor', type=float, default=2.0, help='floor under the pockets of the thin SLA rings, mm')
     ap.add_argument('--min-spacer', type=float, default=3.0,
                     help='gaps shorter than this get no spacer: the ring sits directly on the one below, mm')
-    ap.add_argument('--lid', type=float, default=1.6, help='spacer lid plate thickness (caps the pockets below), mm')
-    ap.add_argument('--spacer-wall', type=float, default=2.0, help='spacer inner/outer wall thickness, mm')
-    ap.add_argument('--ribs', type=int, default=16, help='radial ribs per spacer')
-    ap.add_argument('--rib', type=float, default=1.6, help='rib thickness, mm')
-    ap.add_argument('--boss-wall', type=float, default=2.0, help='plastic around each bolt hole in the spacers, mm')
     ap.add_argument('--fdm-outer-tol', type=float, default=0.5, help='outer bolt clearance in the FDM spacers, mm')
     ap.add_argument('--fdm-inner-tol', type=float, default=0.5, help='inner bolt clearance in the FDM spacers, mm')
     ap.add_argument('--spacer-comp', type=float, default=0.0,
@@ -423,8 +408,7 @@ def main():
         h = z1 - z0
         part = f'spacer_h{h:.2f}'
         if part not in sp_parts:
-            sp = make_spacer(0.0, h + args.spacer_comp, od, args.bore, fdm_holes, args.lid, args.spacer_wall, args.ribs,
-                             args.rib, args.boss_wall, args.notch)
+            sp = make_spacer(0.0, h + args.spacer_comp, od, args.bore, fdm_holes, args.notch)
             sp_parts[part] = (sp, [])
             cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, part + '.stl'), tolerance=0.02, angularTolerance=0.1)
             if not args.no_step:
