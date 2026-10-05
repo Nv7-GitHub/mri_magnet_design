@@ -64,6 +64,7 @@ Generated files go in `cad/`, which is git-ignored (the full set is ~200 MB). Re
 source .venv/bin/activate
 python make_test_coupon.py --out cad/coupon            # SLA coupon            (~10 s)
 python make_fdm_coupon.py  --out cad/fdm_coupon        # FDM coupon            (~5 s)
+python make_coupons_step.py                             # both coupons in one STEP (~5 s)
 python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out cad/best --magnets   # (~2 min)
 python check_bolt_loads.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx                         # (~30 s)
 ```
@@ -192,6 +193,10 @@ section).
 | `spacers.csv` | Per spacer position: which slabs it goes between, part file, z range, nominal and CAD height |
 
 `cad/coupon/tolerance_coupon.{stl,step,png}` and `cad/fdm_coupon/fdm_coupon.{stl,step}` are the coupons.
+`cad/test_coupons.step` (from `make_coupons_step.py`) holds both coupons side by side as separate bodies of one part,
+with no assembly structure, so it imports into Onshape (or any CAD program) as a single Part Studio containing every
+coupon. Run the coupon scripts first if you want non-default coupon settings; missing coupons are generated with
+defaults.
 
 The STEP files are what to design the end caps against: import `assembly.step`, and the end caps sit against the
 bottom face of `slab_0` (z = -75.12 mm) and the top face of `slab_8` (z = +72.12 mm), sharing the bolt pattern.
@@ -238,6 +243,11 @@ Uses the same pocket function as the rings, so a fit on the coupon is the fit in
 `--heights` (default `6.06 10.21 17.22`, the spacer heights; take them from `spacers.csv` for another design),
 `--bolts` (`3 2`), `--hole-tols` (`0.2 ... 0.7`), `--plate` (`1.6`), `--sample` (`20`), `--bar-h`, `--text`,
 `--text-depth`.
+
+### `make_coupons_step.py`
+
+Combines the existing coupon STEPs into `cad/test_coupons.step` (one part, one named body per coupon). Options: `--out`,
+`--gap` (space between coupons, default 10 mm).
 
 ### `check_bolt_loads.py <ledger.xlsx>`
 
