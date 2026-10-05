@@ -14,7 +14,7 @@ For the recommended design (`results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx`: 
 | Part | Process | Count | Notes |
 |---|---|---|---|
 | Ring slabs `slab_0` ... `slab_8` | SLA (Formlabs Form 4, Rigid 4000) | 9, all different | Magnet pockets open at the top face; 8.65-9.65 mm thick, OD 193.6 mm |
-| Spacers `spacer_<i>-<j>` | FDM (PETG or PLA) | 6 (3 heights x 2) | Fill the gaps between rings and cap the magnets of the ring below |
+| Spacers `spacer_h<height>` | FDM (PETG or PLA) | 3 files, each printed 2x | Fill the gaps between rings and cap the magnets of the ring below |
 | SLA tolerance coupon | SLA, same as the rings | 1 | Pocket fit, thin walls, bolt holes |
 | FDM tolerance coupon | FDM, same as the spacers | 1 | Spacer height accuracy, bolt holes |
 | End caps | your own design | 2 | Not generated: close the top slab's pockets and clamp the stack |
@@ -25,17 +25,17 @@ Side view of the stack (z is the bore axis; B0 points along +x, marked by a V no
   +z   end cap (yours)
        slab 8   [■ ■ ■]        pockets open at the top, closed by the end cap
        slab 7   [■ ■ ■]        slab 8 sits directly on slab 7 (rings only 9.35 mm apart)
-       spacer 6-7  ═╤══╤═      FDM: lid plate caps slab 6's magnets, walls + ribs set the gap
+       spacer_h6.06  ═╤══╤═    FDM: lid plate caps slab 6's magnets, walls + ribs set the gap
        slab 6   [■ ■ ■]
-       spacer 5-6
+       spacer_h17.22
        slab 5   [■ ■ ■]
-       spacer 4-5
+       spacer_h10.21
        slab 4   [■ ■ ■]        centre ring, z = 0
-       spacer 3-4
+       spacer_h10.21
        slab 3   [■ ■ ■]
-       spacer 2-3
+       spacer_h17.22
        slab 2   [■ ■ ■]
-       spacer 1-2
+       spacer_h6.06
        slab 1   [■ ■ ■]
        slab 0   [■ ■ ■]        3 mm floor underneath
   -z   end cap (yours)
@@ -143,8 +143,10 @@ Then look at the loading guides `cad/best/slab_<i>_z<z>.png` and, in any CAD vie
 
 - Print each spacer **lid plate down**, flat on the bed; no supports needed. Bed must be at least 194 mm.
 - PETG or PLA, the same settings as the FDM coupon.
-- Measure every spacer's height at several points around the ring. It should match the height in its file name
-  (also in `cad/best/spacers.csv`) to within ~0.05 mm.
+- Print **two of each** spacer file (`spacer_h6.06`, `spacer_h10.21`, `spacer_h17.22`): the +z and -z spacers are the
+  same part. `cad/best/spacers.csv` lists which slabs each one goes between.
+- Measure every spacer's height at several points around the ring. It should match the height in its file name to
+  within ~0.05 mm.
 
 ### 6. Assemble
 
@@ -159,7 +161,9 @@ threads can be slightly magnetic.
    pole identifier or a compass: the compass needle's north-seeking end points at the magnet's **S** face.
 4. Add the next part:
    - `slab_1` sits directly on `slab_0` and closes its pockets; `slab_8` likewise sits directly on `slab_7`;
-   - every other slab gets its spacer first (`spacer_1-2` on `slab_1`, lid plate down, then `slab_2`, and so on).
+   - every other slab gets its spacer first, lid plate down: slab 1 -> `spacer_h6.06` -> slab 2 -> `spacer_h17.22` ->
+     slab 3 -> `spacer_h10.21` -> slab 4 -> `spacer_h10.21` -> slab 5 -> `spacer_h17.22` -> slab 6 -> `spacer_h6.06` ->
+     slab 7 (the order is also in `cad/best/spacers.csv`).
    Load each slab's magnets before putting the next part on it.
 5. Finish with `slab_8`, then the top end cap, which closes slab 8's pockets.
 6. Tighten the nuts only snug (about 0.1-0.2 N m on M3 with washers). The joints need only 5-9 N per bolt to stay
@@ -177,12 +181,12 @@ section).
 | File | Contents |
 |---|---|
 | `slab_<i>_z<z>.stl` / `.step` | SLA ring `i` (0 = bottom, -z), holding the magnets at height `z` (mm) |
-| `spacer_<i>-<j>_h<h>.stl` / `.step` | FDM spacer between slabs `i` and `j`, height `h` (mm) |
+| `spacer_h<h>.stl` / `.step` | FDM spacer of height `h` (mm), modelled at z = 0; print one per position in `spacers.csv` |
 | `slab_<i>_z<z>.png` | Loading guide: top view of the slab, each pocket with its N side in red, bolt holes, +x notch |
-| `assembly.step` | All slabs and spacers in place as one assembly, one named component per part. SLA rings light grey, spacers blue |
-| `assembly_with_magnets.step` | Same plus all magnets (red), grouped per slab (only with `--magnets`) |
+| `assembly.step` | Everything in place: `magnet_holder` > `sla_rings` (9 slabs, light grey) + `fdm_spacers` (3 spacer parts, each placed twice, blue) |
+| `assembly_with_magnets.step` | Same plus `magnets`: one `magnet_6.35mm` part (red) placed 649 times (only with `--magnets`) |
 | `slabs.csv` | Per slab: z range, thickness, magnet count, floor, thinnest walls, volume |
-| `spacers.csv` | Per spacer: z range, nominal and CAD height, volume |
+| `spacers.csv` | Per spacer position: which slabs it goes between, part file, z range, nominal and CAD height |
 
 `cad/coupon/tolerance_coupon.{stl,step,png}` and `cad/fdm_coupon/fdm_coupon.{stl,step}` are the coupons.
 
@@ -257,5 +261,7 @@ coupon with `--heights` set to the new spacer heights from `spacers.csv`.
 - End caps are not generated.
 - M3 does not fit between the 100 mm bore and the inner magnets (only ~2.3 mm of resin there), hence M2 inside.
 - The +z and -z rings are not identical (slab boundaries are not mirror symmetric), so all 9 slabs are separate files.
-  The spacers do come in identical +z/-z pairs.
+  The spacers come in identical +z/-z pairs, so there is one file per spacer height.
+- In the assembly STEPs, repeated parts (the magnet cube, each spacer) are stored once and placed as instances, so a
+  CAD program loads 13 bodies rather than 664. Some importers have an option to keep or break instances; keep them.
 - STEP export of the full set takes a couple of minutes; use `--no-step` while iterating.

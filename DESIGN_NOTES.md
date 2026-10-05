@@ -117,14 +117,15 @@ design choices.
   slab is closed by the end cap (not generated).
 - **FDM spacers** in the other gaps: a 1.6 mm lid plate that caps the pockets of the ring below, 2 mm inner and outer
   walls, 16 radial ribs and a boss around every bolt hole, open on top so they print lid-down without supports. For the
-  recommended design: three heights (6.06, 10.21, 17.22 mm), each printed twice (the +z and -z spacers are identical).
+  recommended design: three heights (6.06, 10.21, 17.22 mm), one file each, each printed twice (the +z and -z spacers
+  are identical).
   `--solid` instead makes every SLA slab fill the gap below it (no spacers).
 - **Bolts**: 8 M3 outside the magnets (one shifted 10 degrees so the stack only goes together one way) and 6 M2 between
   the bore and the inner magnets, placed where they clear the pockets of every slab; M3 does not fit inside (only
   ~2.3 mm of resin between the 100 mm bore and the inner pockets). SLA and FDM hole clearances are set separately
   (`--outer-tol`/`--inner-tol`, `--fdm-outer-tol`/`--fdm-inner-tol`). A V notch on the outside of every part marks +x (B0).
-- `assembly.step` imports as an assembly with one named component per slab and spacer (`assembly_with_magnets.step`
-  adds the cubes, with `--magnets`).
+- `assembly.step` imports as `magnet_holder` > `sla_rings` (slabs) + `fdm_spacers` (one part per spacer height, placed
+  at each position); `assembly_with_magnets.step` adds `magnets`, one cube part placed 649 times (with `--magnets`).
 
 ```bash
 python make_test_coupon.py --out cad/coupon        # SLA: pocket clearances x rotations, thin walls, bolt holes

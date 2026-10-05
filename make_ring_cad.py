@@ -26,10 +26,11 @@ Usage:
 
 Outputs in --out:
   slab_<i>_z<z>.step/.stl   one SLA ring per magnet z, numbered bottom (-z) to top (+z)
-  spacer_<i>-<j>_h<h>.step/.stl  FDM spacer between slabs i and j (print lid-plate down), height h
-  spacers.csv               spacer z ranges and heights
-  assembly.step             all slabs and spacers in place, one named component each
-  assembly_with_magnets.step  the same plus every magnet cube (with --magnets)
+  spacer_h<h>.step/.stl     FDM spacer of height h (print lid-plate down); one file per distinct height,
+                            printed once per position listed in spacers.csv
+  spacers.csv               spacer positions (between which slabs), z ranges, heights and part file
+  assembly.step             magnet_holder > sla_rings (slabs) + fdm_spacers (instances of the spacer parts), in place
+  assembly_with_magnets.step  the same plus magnets: one cube part instanced 649 times (with --magnets)
   slab_<i>_z<z>.png         top-view loading guide: pockets, N notches and magnet counts per slab
   slabs.csv                 z range, thickness, magnet count and minimum walls per slab
 
@@ -415,52 +416,80 @@ def main():
               f'outside {min_od:.2f}, outer bolts {min_rod:.2f}, inner bolts {min_inner:.2f}')
 
 
-    sp_rows = []
+    # spacers: the +z and -z spacers of a symmetric design have the same height and are the same part, so each
+    # distinct height is one file (printed once per position) and one part instanced at each position in the assembly
+    sp_rows, sp_parts = [], {}      # sp_parts: part name -> (solid at z = 0, [(instance name, z bottom), ...])
     for k, z0, z1 in spacers:
         h = z1 - z0
-        sp = make_spacer(z0, z1 + args.spacer_comp, od, args.bore, fdm_holes, args.lid, args.spacer_wall, args.ribs,
-                         args.rib, args.boss_wall, args.notch)
-        name = f'spacer_{k-1}-{k}_h{h:.2f}'
-        cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, name + '.stl'), tolerance=0.02, angularTolerance=0.1)
-        if not args.no_step:
-            cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, name + '.step'))
-        parts.append((name, sp))
-        sp_rows.append(dict(spacer=name, between_slabs=f'{k-1}/{k}', bottom=z0, top=z1, height=h,
-                            cad_height=h + args.spacer_comp, volume_cm3=sp.Volume()/1000))
+        part = f'spacer_h{h:.2f}'
+        if part not in sp_parts:
+            sp = make_spacer(0.0, h + args.spacer_comp, od, args.bore, fdm_holes, args.lid, args.spacer_wall, args.ribs,
+                             args.rib, args.boss_wall, args.notch)
+            sp_parts[part] = (sp, [])
+            cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, part + '.stl'), tolerance=0.02, angularTolerance=0.1)
+            if not args.no_step:
+                cq.exporters.export(cq.Workplane().add(sp), os.path.join(args.out, part + '.step'))
+        sp_parts[part][1].append((f'spacer_{k-1}-{k}', z0))
+        sp_rows.append(dict(spacer=f'spacer_{k-1}-{k}', part=part, between_slabs=f'{k-1}/{k}', bottom=z0, top=z1,
+                            height=h, cad_height=h + args.spacer_comp, volume_cm3=sp_parts[part][0].Volume()/1000))
         print(f'  spacer between slabs {k-1}/{k}: {z0:+7.2f} to {z1:+7.2f} mm, height {h:.2f} mm '
-              f'(CAD {h + args.spacer_comp:.2f}), {sp.Volume()/1000:.0f} cm3')
+              f'(CAD {h + args.spacer_comp:.2f}) -> {part}')
+    for part, (sp, inst) in sp_parts.items():
+        print(f'  {part}: print {len(inst)} ({", ".join(n for n, _ in inst)}), {sp.Volume()/1000:.0f} cm3 each')
     if sp_rows:
         pd.DataFrame(sp_rows).to_csv(os.path.join(args.out, 'spacers.csv'), index=False)
 
     if not args.no_step:
-        # assembly.step: one named component per slab, in place, so it imports as an assembly of the ring files;
-        # assembly_with_magnets.step adds the cubes (one sub-assembly per slab) for interference checks and renders
+        # assembly.step: magnet_holder > sla_rings (one component per slab), fdm_spacers (one part per spacer height,
+        # instanced at each position). assembly_with_magnets.step adds magnets: one cube part instanced at every
+        # magnet position, so CAD programs load one magnet body, not 649.
+        sla, fdm, mag = cq.Color(0.8, 0.8, 0.85, 1), cq.Color(0.2, 0.45, 0.8, 1), cq.Color(0.8, 0.1, 0.1, 1)
+        cube = cq.Assembly(cq.Solid.makeBox(a, a, a, pnt=cq.Vector(-a/2, -a/2, -a/2)), name='magnet', color=mag)
+
         def build(with_magnets):
+            renames = {}
             assy = cq.Assembly(name='magnet_holder')
-            for i, (name, s) in enumerate(parts):
-                color = cq.Color(0.2, 0.45, 0.8, 1) if name.startswith('spacer') else cq.Color(0.8, 0.8, 0.85, 1)
-                assy.add(s, name=name, color=color)
+            rings = cq.Assembly(name='sla_rings')
+            for name, s in parts:
+                rings.add(s, name=name, color=sla)
+            assy.add(rings)
+            if sp_parts:
+                fdm_assy = cq.Assembly(name='fdm_spacers')
+                for part, (sp, inst) in sp_parts.items():
+                    proto = cq.Assembly(sp, name=part, color=fdm)
+                    for n, (iname, z0) in enumerate(inst):
+                        fdm_assy.add(proto, name=iname, loc=cq.Location(cq.Vector(0, 0, z0)))
+                    renames[inst[0][0]] = part
+                assy.add(fdm_assy)
             if with_magnets:
-                for i, z in enumerate(zs):
-                    sub = cq.Assembly(name=f'magnets_{i}')
-                    for j in np.where(zkey.values == round(z, 3))[0]:
-                        r = L.iloc[j]
-                        cube = (cq.Solid.makeBox(a, a, a, pnt=cq.Vector(-a/2, -a/2, -a/2))
-                                .rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), r['Z-rot'])
-                                .translate(cq.Vector(r['X-pos'], r['Y-pos'], r['Z-pos'])))
-                        sub.add(cube, name=f'magnet_{j}', color=cq.Color(0.8, 0.1, 0.1, 1))
-                    assy.add(sub)
-            return assy
-        build(False).export(os.path.join(args.out, 'assembly.step'))
+                mags = cq.Assembly(name='magnets')
+                for j, r in L.iterrows():
+                    mags.add(cube, name=f'magnet_{j}', loc=cq.Location(cq.Vector(r['X-pos'], r['Y-pos'], r['Z-pos']),
+                                                                    cq.Vector(0, 0, 1), r['Z-rot']))
+                renames['magnet_0'] = f'magnet_{a:g}mm'
+                assy.add(mags)
+            return assy, renames
+
+        def export(with_magnets, fn):
+            assy, renames = build(with_magnets)
+            path = os.path.join(args.out, fn)
+            assy.export(path)
+            # a shared part takes the name of its first instance in the STEP file: give it the part name instead
+            txt = open(path).read()
+            for old, new in renames.items():
+                assert txt.count(f"PRODUCT('{old}','{old}'") == 1
+                txt = txt.replace(f"PRODUCT('{old}','{old}'", f"PRODUCT('{new}','{new}'")
+            open(path, 'w').write(txt)
+        export(False, 'assembly.step')
         if args.magnets:
-            build(True).export(os.path.join(args.out, 'assembly_with_magnets.step'))
+            export(True, 'assembly_with_magnets.step')
 
     pd.DataFrame(rows).to_csv(os.path.join(args.out, 'slabs.csv'), index=False)
     print(f'stack {bottoms[0]:+.2f} to {tops[-1]:+.2f} mm ({tops[-1] - bottoms[0]:.1f} mm long, without end caps); '
           f'SLA {sum(r["volume_cm3"] for r in rows):.0f} cm3' + (f', FDM spacers {sum(r["volume_cm3"] for r in sp_rows):.0f} cm3' if sp_rows else ''))
     for w in warnings:
         print('  WARNING:', w)
-    print(f'wrote {len(parts)} parts to {args.out}')
+    print(f'wrote {len(parts)} slabs and {len(sp_parts)} spacer parts to {args.out}')
 
 
 if __name__ == '__main__':
